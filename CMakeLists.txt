@@ -39,8 +39,8 @@ option(HUNTER_RUN_UPLOAD "Upload binaries to the cache server" ${run_upload})
 
 include(HunterGate)
 HunterGate(
-    URL "https://github.com/ruslo/hunter/archive/v0.23.211.tar.gz"
-    SHA1 "c022f0c2480e835a6bafdd734035ec2071b51897"
+    URL "https://github.com/cpp-pm/hunter/archive/v0.23.271.tar.gz"
+    SHA1 "2d6686024529b471e0cc3a4fc07d4d64b62a53ee"
     LOCAL
 )
 
@@ -84,6 +84,9 @@ hunter_add_package(ethash)
 find_package(ethash CONFIG REQUIRED)
 
 message("Crypto++: ${HUNTER_cryptopp_VERSION}")
+
+hunter_add_package(crc32c)
+find_package(Crc32c CONFIG REQUIRED)
 
 include(ProjectSecp256k1)
 include(ProjectLibFF)
