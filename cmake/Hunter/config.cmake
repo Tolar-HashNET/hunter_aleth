@@ -17,18 +17,18 @@ hunter_config(
     HTTP_CLIENT=NO
 )
 
-hunter_config(Boost VERSION 1.70.0-p0)
+hunter_config(Boost VERSION 1.72.0-p1)
+
+hunter_config(crc32c VERSION 1.0.5)
 
 hunter_config(
     intx
-    VERSION 0.4.0
-    URL https://github.com/chfast/intx/archive/v0.4.0.tar.gz
-    SHA1 8a2a0b0efa64899db972166a9b3568a6984c61bc
+    URL https://github.com/chfast/intx/archive/v0.5.0.tar.gz    
+    SHA1 7f917cfe9046278d348a5cf36c20f9847d351807
 )
 
 hunter_config(
     GTest
-    VERSION 1.8.1
     URL https://github.com/google/googletest/archive/release-1.8.1.tar.gz
     SHA1 152b849610d91a9dfa1401293f43230c2e0c33f8
     CMAKE_ARGS BUILD_GMOCK=OFF gtest_force_shared_crt=ON
