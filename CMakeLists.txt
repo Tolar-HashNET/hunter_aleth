@@ -44,7 +44,7 @@ HunterGate(
     LOCAL
 )
 
-cable_set_build_type(DEFAULT RelWithDebInfo CONFIGURATION_TYPES Debug;Release;RelWithDebInfo)
+#cable_set_build_type(DEFAULT RelWithDebInfo CONFIGURATION_TYPES Debug;Release;RelWithDebInfo)
 
 project(aleth)
 set(PROJECT_VERSION 1.8.0)
