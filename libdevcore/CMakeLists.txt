@@ -64,7 +64,7 @@ target_include_directories(devcore SYSTEM PUBLIC ${Boost_INCLUDE_DIR} PRIVATE ..
 target_link_libraries(devcore PUBLIC aleth-buildinfo Boost::filesystem Boost::system Boost::log Boost::thread Threads::Threads PRIVATE ethash::ethash)
 
 hunter_add_package(crc32c)
-find_package(Crc32c CONFIG REQUIRED)
+find_package(Crc32c CONFIG REQUIRED NAMES crc32c CRC32C)
 
 hunter_add_package(leveldb)
 find_package(leveldb CONFIG REQUIRED)

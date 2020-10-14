@@ -86,7 +86,7 @@ find_package(ethash CONFIG REQUIRED)
 message("Crypto++: ${HUNTER_cryptopp_VERSION}")
 
 hunter_add_package(crc32c)
-find_package(Crc32c CONFIG REQUIRED)
+find_package(Crc32c CONFIG REQUIRED NAMES crc32c CRC32C)
 
 include(ProjectSecp256k1)
 include(ProjectLibFF)
