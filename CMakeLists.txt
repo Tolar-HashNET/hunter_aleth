@@ -4,9 +4,9 @@
 
 cmake_minimum_required(VERSION 3.9.3)
 
-if (NOT EXISTS ${CMAKE_SOURCE_DIR}/evmc/.git OR NOT EXISTS ${CMAKE_SOURCE_DIR}/cmake/cable/.git)
-    message(FATAL_ERROR "Git submodules not initialized, execute:\n  git submodule update --init")
-endif()
+#if (NOT EXISTS ${CMAKE_SOURCE_DIR}/evmc/.git OR NOT EXISTS ${CMAKE_SOURCE_DIR}/cmake/cable/.git)
+#    message(FATAL_ERROR "Git submodules not initialized, execute:\n  git submodule update --init")
+#endif()
 
 include(cmake/cable/bootstrap.cmake)
 include(CableBuildInfo)
@@ -85,8 +85,8 @@ find_package(ethash CONFIG REQUIRED)
 
 message("Crypto++: ${HUNTER_cryptopp_VERSION}")
 
-hunter_add_package(crc32c)
-find_package(Crc32c CONFIG REQUIRED)
+#hunter_add_package(crc32c)
+#find_package(Crc32c CONFIG REQUIRED)
 
 include(ProjectSecp256k1)
 include(ProjectLibFF)
