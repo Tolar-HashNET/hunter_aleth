@@ -66,7 +66,7 @@ target_link_libraries(devcore PUBLIC aleth-buildinfo Boost::filesystem Boost::sy
 #hunter_add_package(crc32c)
 #find_package(Crc32c CONFIG REQUIRED)
 
-hunter_add_package(leveldb)
+#hunter_add_package(leveldb)
 find_package(leveldb CONFIG REQUIRED)
 target_link_libraries(devcore PRIVATE leveldb::leveldb)
 

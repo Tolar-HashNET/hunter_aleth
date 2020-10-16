@@ -14,7 +14,8 @@ include(CableBuildType)
 include(CableToolchains)
 include(GNUInstallDirs)
 
-cable_configure_toolchain(DEFAULT cxx14-pic)
+#cable_configure_toolchain(DEFAULT cxx14-pic)
+set(CMAKE_CXX_STANDARD 14)
 
 set(ETH_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake" CACHE PATH "The path to the cmake directory")
 list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
@@ -44,7 +45,7 @@ option(HUNTER_RUN_UPLOAD "Upload binaries to the cache server" ${run_upload})
 #    LOCAL
 #)
 
-#cable_set_build_type(DEFAULT RelWithDebInfo CONFIGURATION_TYPES Debug;Release;RelWithDebInfo)
+cable_set_build_type(DEFAULT RelWithDebInfo CONFIGURATION_TYPES Debug;Release;RelWithDebInfo)
 
 project(aleth)
 set(PROJECT_VERSION 1.8.0)
@@ -60,27 +61,27 @@ include(EthExecutableHelper)
 include(EthDependencies)
 include(EthUtils)
 
-set(Boost_USE_STATIC_LIBS ON)
-set(Boost_USE_MULTITHREADED ON)
-hunter_add_package(Boost COMPONENTS program_options filesystem system thread context fiber log)
+#set(Boost_USE_STATIC_LIBS ON)
+#set(Boost_USE_MULTITHREADED ON)
+#hunter_add_package(Boost COMPONENTS program_options filesystem system thread context fiber log)
 find_package(Boost CONFIG REQUIRED program_options filesystem system thread context fiber log)
 
-hunter_add_package(jsoncpp)
+#hunter_add_package(jsoncpp)
 find_package(jsoncpp CONFIG REQUIRED)
 
-hunter_add_package(Snappy)
+#hunter_add_package(Snappy)
 find_package(Snappy CONFIG REQUIRED)
 
-hunter_add_package(cryptopp)
+#hunter_add_package(cryptopp)
 find_package(cryptopp CONFIG REQUIRED)
 
-hunter_add_package(libjson-rpc-cpp)
+#hunter_add_package(libjson-rpc-cpp)
 find_package(libjson-rpc-cpp CONFIG REQUIRED)
 
-hunter_add_package(libscrypt)
+#hunter_add_package(libscrypt)
 find_package(libscrypt CONFIG REQUIRED)
 
-hunter_add_package(ethash)
+#hunter_add_package(ethash)
 find_package(ethash CONFIG REQUIRED)
 
 message("Crypto++: ${HUNTER_cryptopp_VERSION}")
