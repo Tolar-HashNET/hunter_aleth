@@ -23,10 +23,10 @@ list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
 set(CMAKE_MAP_IMPORTED_CONFIG_DEBUG Release)
 set(CMAKE_MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
 
-set(HUNTER_CONFIGURATION_TYPES Release CACHE STRING "Hunter configuration types")
-set(HUNTER_JOBS_NUMBER 4 CACHE STRING "Hunter jobs number")
-set(HUNTER_CACHE_SERVERS "https://github.com/ethereum/hunter-cache" CACHE STRING "Hunter cache servers")
-set(HUNTER_PASSWORDS_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Hunter/passwords.cmake CACHE STRING "Hunter password path")
+#set(HUNTER_CONFIGURATION_TYPES Release CACHE STRING "Hunter configuration types")
+#set(HUNTER_JOBS_NUMBER 4 CACHE STRING "Hunter jobs number")
+#set(HUNTER_CACHE_SERVERS "https://github.com/ethereum/hunter-cache" CACHE STRING "Hunter cache servers")
+#set(HUNTER_PASSWORDS_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Hunter/passwords.cmake CACHE STRING "Hunter password path")
 
 # In CI builds upload the binaries if the GITHUB_USER_PASSWORD was decrypted
 # (only for branches and internal PRs).
@@ -37,12 +37,12 @@ else()
 endif()
 option(HUNTER_RUN_UPLOAD "Upload binaries to the cache server" ${run_upload})
 
-include(HunterGate)
-HunterGate(
-    URL "https://github.com/cpp-pm/hunter/archive/v0.23.271.tar.gz"
-    SHA1 "2d6686024529b471e0cc3a4fc07d4d64b62a53ee"
-    LOCAL
-)
+#include(HunterGate)
+#HunterGate(
+#    URL "https://github.com/cpp-pm/hunter/archive/v0.23.271.tar.gz"
+#    SHA1 "2d6686024529b471e0cc3a4fc07d4d64b62a53ee"
+#    LOCAL
+#)
 
 #cable_set_build_type(DEFAULT RelWithDebInfo CONFIGURATION_TYPES Debug;Release;RelWithDebInfo)
 
