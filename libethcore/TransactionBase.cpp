@@ -9,7 +9,6 @@
 #include "TransactionBase.h"
 #include "EVMSchedule.h"
 
-using namespace std;
 using namespace dev;
 using namespace dev::eth;
 

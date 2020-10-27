@@ -128,7 +128,7 @@ bool RocksDB::exists(Slice _key) const
 {
     std::string value;
     rocksdb::Slice const key(_key.data(), _key.size());
-    if (!m_db->KeyMayExist(m_readOptions, key, &value, nullptr))
+    if (!m_db->KeyMayExist(m_readOptions, key, &value, static_cast<bool*>(nullptr)))
         return false;
 
     auto const status = m_db->Get(m_readOptions, key, &value);

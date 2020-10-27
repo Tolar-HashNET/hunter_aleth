@@ -12,7 +12,6 @@
 #include "RLPxHandshake.h"
 #include "RLPXPacket.h"
 
-using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 

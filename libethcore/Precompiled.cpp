@@ -12,7 +12,6 @@
 #include <libdevcrypto/Hash.h>
 #include <libdevcrypto/LibSnark.h>
 #include <libethcore/Common.h>
-using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
@@ -58,7 +57,7 @@ ETH_REGISTER_PRECOMPILED(ecrecover)(bytesConstRef _in)
         h256 s;
     } in;
 
-    memcpy(&in, _in.data(), min(_in.size(), sizeof(in)));
+    memcpy(&in, _in.data(), std::min(_in.size(), sizeof(in)));
 
     h256 ret;
     u256 v = (u256)in.v;
@@ -127,7 +126,7 @@ bigint parseBigEndianRightPadded(bytesConstRef _in, bigint const& _begin, bigint
     size_t const count{_count};
 
     // crop _in, not going beyond its size
-    bytesConstRef cropped = _in.cropped(begin, min(count, _in.count() - begin));
+    bytesConstRef cropped = _in.cropped(begin, std::min(count, _in.count() - begin));
 
     bigint ret = fromBigEndian<bigint>(cropped);
     // shift as if we had right-padding zeroes
@@ -195,10 +194,10 @@ ETH_REGISTER_PRECOMPILED_PRICER(modexp)(bytesConstRef _in, ChainOperationParams 
     bigint const expLength(parseBigEndianRightPadded(_in, 32, 32));
     bigint const modLength(parseBigEndianRightPadded(_in, 64, 32));
 
-    bigint const maxLength(max(modLength, baseLength));
+    bigint const maxLength(std::max(modLength, baseLength));
     bigint const adjustedExpLength(expLengthAdjust(baseLength + 96, expLength, _in));
 
-    return multComplexity(maxLength) * max<bigint>(adjustedExpLength, 1) / 20;
+    return multComplexity(maxLength) * std::max<bigint>(adjustedExpLength, 1) / 20;
 }
 
 ETH_REGISTER_PRECOMPILED(alt_bn128_G1_add)(bytesConstRef _in)

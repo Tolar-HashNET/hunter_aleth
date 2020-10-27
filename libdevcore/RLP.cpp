@@ -2,7 +2,6 @@
 // Copyright 2013-2019 Aleth Authors.
 // Licensed under the GNU General Public License, Version 3.
 #include "RLP.h"
-using namespace std;
 using namespace dev;
 
 bytes dev::RLPNull = rlp("");
@@ -339,7 +338,7 @@ static void streamOut(std::ostream& _out, dev::RLP const& _d, unsigned _depth = 
     else if (_d.isNull())
         _out << "null";
     else if (_d.isInt())
-        _out << std::showbase << std::hex << std::nouppercase << _d.toInt<bigint>(RLP::LaissezFaire) << dec;
+        _out << std::showbase << std::hex << std::nouppercase << _d.toInt<bigint>(RLP::LaissezFaire) << std::dec;
     else if (_d.isData())
         _out << escaped(_d.toString(), false);
     else if (_d.isList())

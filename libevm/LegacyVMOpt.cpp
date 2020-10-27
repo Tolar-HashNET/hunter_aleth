@@ -3,7 +3,6 @@
 // Licensed under the GNU General Public License, Version 3.
 #include "LegacyVM.h"
 
-using namespace std;
 using namespace dev;
 using namespace dev::eth;
 

@@ -8,7 +8,6 @@
 
 #include "Exceptions.h"
 
-using namespace std;
 using namespace dev;
 
 namespace
@@ -25,7 +24,7 @@ int fromHexChar(char _i) noexcept
 }
 }
 
-bool dev::isHex(string const& _s) noexcept
+bool dev::isHex(std::string const& _s) noexcept
 {
 	auto it = _s.begin();
 	if (_s.compare(0, 2, "0x") == 0)
@@ -35,7 +34,7 @@ bool dev::isHex(string const& _s) noexcept
 
 std::string dev::escaped(std::string const& _s, bool _all)
 {
-	static const map<char, char> prettyEscapes{{'\r', 'r'}, {'\n', 'n'}, {'\t', 't'}, {'\v', 'v'}};
+	static const std::map<char, char> prettyEscapes{{'\r', 'r'}, {'\n', 'n'}, {'\t', 't'}, {'\v', 'v'}};
 	std::string ret;
 	ret.reserve(_s.size() + 2);
 	ret.push_back('"');

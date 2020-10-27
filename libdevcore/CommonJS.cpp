@@ -5,12 +5,10 @@
 
 #include "CommonJS.h"
 
-using namespace std;
-
 namespace dev
 {
 
-bytes jsToBytes(string const& _s, OnFailed _f)
+bytes jsToBytes(std::string const& _s, OnFailed _f)
 {
 	try
 	{
@@ -21,7 +19,7 @@ bytes jsToBytes(string const& _s, OnFailed _f)
 		if (_f == OnFailed::InterpretRaw)
 			return asBytes(_s);
 		else if (_f == OnFailed::Throw)
-			throw invalid_argument("Cannot intepret '" + _s + "' as bytes; must be 0x-prefixed hex or decimal.");
+			throw std::invalid_argument("Cannot intepret '" + _s + "' as bytes; must be 0x-prefixed hex or decimal.");
 	}
 	return bytes();
 }
@@ -30,7 +28,7 @@ bytes padded(bytes _b, unsigned _l)
 {
 	while (_b.size() < _l)
 		_b.insert(_b.begin(), 0);
-	return asBytes(asString(_b).substr(_b.size() - max(_l, _l)));
+	return asBytes(asString(_b).substr(_b.size() - std::max(_l, _l)));
 }
 
 bytes paddedRight(bytes _b, unsigned _l)
@@ -42,7 +40,7 @@ bytes paddedRight(bytes _b, unsigned _l)
 bytes unpadded(bytes _b)
 {
 	auto p = asString(_b).find_last_not_of((char)0);
-	_b.resize(p == string::npos ? 0 : (p + 1));
+	_b.resize(p == std::string::npos ? 0 : (p + 1));
 	return _b;
 }
 
@@ -60,15 +58,15 @@ bytes unpadLeft(bytes _b)
 	return _b;
 }
 
-string fromRaw(h256 _n)
+std::string fromRaw(h256 _n)
 {
 	if (_n)
 	{
-		string s((char const*)_n.data(), 32);
+		std::string s((char const*)_n.data(), 32);
 		auto l = s.find_first_of('\0');
 		if (!l)
 			return "";
-		if (l != string::npos)
+		if (l != std::string::npos)
 			s.resize(l);
 		for (auto i: s)
 			if (i < 32)

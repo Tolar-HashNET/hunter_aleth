@@ -19,7 +19,6 @@
 #include "AES.h"
 #include "CryptoPP.h"
 #include "Exceptions.h"
-using namespace std;
 using namespace dev;
 using namespace dev::crypto;
 
@@ -36,7 +35,7 @@ secp256k1_context const* getCtx()
 }
 
 template <std::size_t KeySize>
-bool toPublicKey(Secret const& _secret, unsigned _flags, array<byte, KeySize>& o_serializedPubkey)
+bool toPublicKey(Secret const& _secret, unsigned _flags, std::array<byte, KeySize>& o_serializedPubkey)
 {
     auto* ctx = getCtx();
     secp256k1_pubkey rawPubkey;
@@ -195,7 +194,7 @@ bytes dev::encryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef _pl
     }
     catch (CryptoPP::Exception& _e)
     {
-        cerr << _e.what() << endl;
+        std::cerr << _e.what() << std::endl;
         return bytes();
     }
 }
@@ -215,7 +214,7 @@ bytesSec dev::decryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef 
     }
     catch (CryptoPP::Exception& _e)
     {
-        cerr << _e.what() << endl;
+        std::cerr << _e.what() << std::endl;
         return bytesSec();
     }
 }
@@ -295,7 +294,7 @@ bool dev::verify(PublicCompressed const& _key, h512 const& _signature, h256 cons
     return secp256k1_ecdsa_verify(ctx, &rawSig, _hash.data(), &rawPubkey);
 }
 
-bytesSec dev::pbkdf2(string const& _pass, bytes const& _salt, unsigned _iterations, unsigned _dkLen)
+bytesSec dev::pbkdf2(std::string const& _pass, bytes const& _salt, unsigned _iterations, unsigned _dkLen)
 {
     bytesSec ret(_dkLen);
     if (CryptoPP::PKCS5_PBKDF2_HMAC<CryptoPP::SHA256>().DeriveKey(

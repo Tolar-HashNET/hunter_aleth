@@ -12,8 +12,6 @@
 
 #include <aleth/buildinfo.h>
 
-using namespace std;
-
 namespace dev
 {
 char const* Version = aleth_get_buildinfo()->project_version;
@@ -32,9 +30,9 @@ void InvariantChecker::checkInvariants(HasInvariants const* _this, char const* _
 TimerHelper::~TimerHelper()
 {
     auto e = std::chrono::high_resolution_clock::now() - m_t;
-    if (!m_ms || e > chrono::milliseconds(m_ms))
+    if (!m_ms || e > std::chrono::milliseconds(m_ms))
         clog(VerbosityDebug, "timer")
-            << m_id << " " << chrono::duration_cast<chrono::milliseconds>(e).count() << " ms";
+            << m_id << " " << std::chrono::duration_cast<std::chrono::milliseconds>(e).count() << " ms";
 }
 
 int64_t utcTime()
@@ -45,9 +43,9 @@ int64_t utcTime()
     return time(0);
 }
 
-string inUnits(bigint const& _b, strings const& _units)
+std::string inUnits(bigint const& _b, strings const& _units)
 {
-    ostringstream ret;
+    std::ostringstream ret;
     u256 b;
     if (_b < 0)
     {
@@ -66,7 +64,7 @@ string inUnits(bigint const& _b, strings const& _units)
         ret << (b / biggest) << " " << _units.back();
         return ret.str();
     }
-    ret << setprecision(3);
+    ret << std::setprecision(3);
 
     u256 unit = biggest;
     for (auto it = _units.rbegin(); it != _units.rend(); ++it)

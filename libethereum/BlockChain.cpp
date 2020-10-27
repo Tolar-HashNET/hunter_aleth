@@ -22,7 +22,6 @@
 #include <boost/exception/errinfo_nested_exception.hpp>
 #include <boost/filesystem.hpp>
 
-using namespace std;
 using namespace dev;
 using namespace dev::eth;
 namespace fs = boost::filesystem;
@@ -37,11 +36,11 @@ db::Slice const c_sliceChainStart{c_chainStart};
 
 std::ostream& dev::eth::operator<<(std::ostream& _out, BlockChain const& _bc)
 {
-    string cmp = toBigEndianString(_bc.currentHash());
+    std::string cmp = toBigEndianString(_bc.currentHash());
     _bc.m_blocksDB->forEach([&_out, &cmp](db::Slice const& _key, db::Slice const& _value) {
-        if (string(_key.data(), _key.size()) != "best")
+        if (std::string(_key.data(), _key.size()) != "best")
         {
-            const string key(_key.data(), _key.size());
+            const std::string key(_key.data(), _key.size());
             try
             {
                 BlockHeader d(bytesConstRef{_value});
@@ -141,7 +140,7 @@ void addBlockInfo(Exception& io_ex, BlockHeader const& _header, bytes&& _blockDa
 
 
 /// Duration between flushes.
-static const chrono::system_clock::duration c_collectionDuration = chrono::seconds(60);
+static const std::chrono::system_clock::duration c_collectionDuration = std::chrono::seconds(60);
 
 /// Length of death row (total time in cache is multiple of this and collection duration).
 static const unsigned c_collectionQueueSize = 20;
@@ -183,7 +182,7 @@ void BlockChain::init(ChainParams const& _p)
 {
     // initialise deathrow.
     m_cacheUsage.resize(c_collectionQueueSize);
-    m_lastCollection = chrono::system_clock::now();
+    m_lastCollection = std::chrono::system_clock::now();
 
     // Initialise with the genesis as the last block on the longest chain.
     m_params = _p;
@@ -200,7 +199,7 @@ bool BlockChain::open(fs::path const& _path, WithExisting _we)
     if (db::isDiskDatabase())
     {
         if (!m_dbPaths || m_dbPaths->rootPath() != _path)
-            m_dbPaths = make_unique<DatabasePaths>(_path, m_genesisHash);
+            m_dbPaths = std::make_unique<DatabasePaths>(_path, m_genesisHash);
 
         if (_we == WithExisting::Kill)
         {
@@ -357,7 +356,7 @@ void BlockChain::rebuild(
     }
 
     if (!m_dbPaths || m_dbPaths->rootPath() != _path)
-        m_dbPaths = make_unique<DatabasePaths>(_path, m_genesisHash);
+        m_dbPaths = std::make_unique<DatabasePaths>(_path, m_genesisHash);
 
     unsigned const originalNumber = m_lastBlockNumber;
 
@@ -418,13 +417,13 @@ void BlockChain::rebuild(
     h256 lastHash = m_lastBlockHash;
     Timer t;
     bool rebuildFailed = false;
-    string exceptionInfo;
+    std::string exceptionInfo;
     for (unsigned d = 1; d <= originalNumber; ++d)
     {
         if (!(d % 1000))
         {
             LOG(m_loggerInfo) << "\n1000 blocks in " << t.elapsed()
-                              << "s = " << (1000.0 / t.elapsed()) << "b/s" << endl;
+                              << "s = " << (1000.0 / t.elapsed()) << "b/s" << std::endl;
             t.restart();
         }
         try
@@ -473,9 +472,9 @@ void BlockChain::rebuild(
     }
 }
 
-string BlockChain::dumpDatabase() const
+std::string BlockChain::dumpDatabase() const
 {
-    ostringstream oss;
+    std::ostringstream oss;
     oss << m_lastBlockHash << '\n';
 
     // We need to first insert the db data into an ordered map so that the string returned from this function
@@ -492,7 +491,7 @@ string BlockChain::dumpDatabase() const
     return oss.str();
 }
 
-tuple<ImportRoute, bool, unsigned> BlockChain::sync(
+std::tuple<ImportRoute, bool, unsigned> BlockChain::sync(
     BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max)
 {
     //  _bq.tick(*this);
@@ -505,7 +504,7 @@ tuple<ImportRoute, bool, unsigned> BlockChain::sync(
     return {std::get<0>(importResult), moreBlocks, std::get<2>(importResult)};
 }
 
-tuple<ImportRoute, h256s, unsigned> BlockChain::sync(
+std::tuple<ImportRoute, h256s, unsigned> BlockChain::sync(
     VerifiedBlocks const& _blocks, OverlayDB const& _stateDB)
 {
     h256s fresh;
@@ -543,12 +542,12 @@ tuple<ImportRoute, h256s, unsigned> BlockChain::sync(
             catch (dev::eth::FutureTime const&)
             {
                 cwarn << "ODD: Import queue contains a block with future time.";
-                this_thread::sleep_for(chrono::seconds(1));
+                std::this_thread::sleep_for(std::chrono::seconds(1));
                 continue;
             }
             catch (dev::eth::TransientError const&)
             {
-                this_thread::sleep_for(chrono::milliseconds(100));
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 continue;
             }
             catch (Exception& ex)
@@ -565,29 +564,29 @@ tuple<ImportRoute, h256s, unsigned> BlockChain::sync(
     return {ImportRoute{dead, fresh, goodTransactions}, badBlockHashes, count};
 }
 
-pair<ImportResult, ImportRoute> BlockChain::attemptImport(bytes const& _block, OverlayDB const& _stateDB, bool _mustBeNew) noexcept
+std::pair<ImportResult, ImportRoute> BlockChain::attemptImport(bytes const& _block, OverlayDB const& _stateDB, bool _mustBeNew) noexcept
 {
     try
     {
-        return make_pair(ImportResult::Success, import(verifyBlock(&_block, m_onBad, ImportRequirements::OutOfOrderChecks), _stateDB, _mustBeNew));
+        return std::make_pair(ImportResult::Success, import(verifyBlock(&_block, m_onBad, ImportRequirements::OutOfOrderChecks), _stateDB, _mustBeNew));
     }
     catch (UnknownParent&)
     {
-        return make_pair(ImportResult::UnknownParent, ImportRoute());
+        return std::make_pair(ImportResult::UnknownParent, ImportRoute());
     }
     catch (AlreadyHaveBlock&)
     {
-        return make_pair(ImportResult::AlreadyKnown, ImportRoute());
+        return std::make_pair(ImportResult::AlreadyKnown, ImportRoute());
     }
     catch (FutureTime&)
     {
-        return make_pair(ImportResult::FutureTimeKnown, ImportRoute());
+        return std::make_pair(ImportResult::FutureTimeKnown, ImportRoute());
     }
     catch (Exception& ex)
     {
         if (m_onBad)
             m_onBad(ex);
-        return make_pair(ImportResult::Malformed, ImportRoute());
+        return std::make_pair(ImportResult::Malformed, ImportRoute());
     }
 }
 
@@ -620,7 +619,7 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
     }
 
     // Check receipts
-    vector<bytesConstRef> receipts;
+    std::vector<bytesConstRef> receipts;
     for (auto i: RLP(_receipts))
         receipts.push_back(i.data());
     h256 receiptsRoot = orderedTrieRoot(receipts);
@@ -992,7 +991,7 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
             catch (boost::exception const& ex)
             {
                 cwarn << "Error writing to extras database: " << boost::diagnostic_information(ex);
-                cout << "Put" << toHex(bytesConstRef(db::Slice("best"))) << "=>"
+                std::cout << "Put" << toHex(bytesConstRef(db::Slice("best"))) << "=>"
                      << toHex(bytesConstRef(db::Slice((char const*)&m_lastBlockHash, 32)));
                 cwarn << "Fail writing to extras database. Bombing out.";
                 exit(-1);
@@ -1073,7 +1072,7 @@ void BlockChain::clearBlockBlooms(unsigned _begin, unsigned _end)
 
 void BlockChain::rescue(OverlayDB const& _db)
 {
-    cout << "Rescuing database..." << endl;
+    std::cout << "Rescuing database..." << std::endl;
 
     unsigned u = 1;
     while (true)
@@ -1090,34 +1089,34 @@ void BlockChain::rescue(OverlayDB const& _db)
         }
     }
     unsigned l = u / 2;
-    cout << "Finding last likely block number..." << endl;
+    std::cout << "Finding last likely block number..." << std::endl;
     while (u - l > 1)
     {
         unsigned m = (u + l) / 2;
-        cout << " " << m << flush;
+        std::cout << " " << m << std::flush;
         if (isKnown(numberHash(m)))
             l = m;
         else
             u = m;
     }
-    cout << "  lowest is " << l << endl;
+    std::cout << "  lowest is " << l << std::endl;
     for (; l > 0; --l)
     {
         h256 h = numberHash(l);
-        cout << "Checking validity of " << l << " (" << h << ")..." << flush;
+        std::cout << "Checking validity of " << l << " (" << h << ")..." << std::flush;
         try
         {
-            cout << "block..." << flush;
+            std::cout << "block..." << std::flush;
             BlockHeader bi(block(h));
-            cout << "extras..." << flush;
+            std::cout << "extras..." << std::flush;
             details(h);
-            cout << "state..." << flush;
+            std::cout << "state..." << std::flush;
             if (_db.exists(bi.stateRoot()))
                 break;
         }
         catch (...) {}
     }
-    cout << "OK." << endl;
+    std::cout << "OK." << std::endl;
     rewind(l);
 }
 
@@ -1137,7 +1136,7 @@ void BlockChain::rewind(unsigned _newHead)
         catch (boost::exception const& ex)
         {
             cwarn << "Error writing to extras database: " << boost::diagnostic_information(ex);
-            cout << "Put" << toHex(bytesConstRef(db::Slice("best"))) << "=>"
+            std::cout << "Put" << toHex(bytesConstRef(db::Slice("best"))) << "=>"
                  << toHex(bytesConstRef(db::Slice((char const*)&m_lastBlockHash, 32)));
             cwarn << "Fail writing to extras database. Bombing out.";
             exit(-1);
@@ -1146,7 +1145,7 @@ void BlockChain::rewind(unsigned _newHead)
     }
 }
 
-tuple<h256s, h256, unsigned> BlockChain::treeRoute(h256 const& _from, h256 const& _to, bool _common, bool _pre, bool _post) const
+std::tuple<h256s, h256, unsigned> BlockChain::treeRoute(h256 const& _from, h256 const& _to, bool _common, bool _pre, bool _post) const
 {
     if (!_from || !_to)
         return make_tuple(h256s(), h256(), 0);
@@ -1155,7 +1154,7 @@ tuple<h256s, h256, unsigned> BlockChain::treeRoute(h256 const& _from, h256 const
     BlockDetails const toDetails = details(_to);
     // Needed to handle a special case when the parent of inserted block is not present in DB.
     if (fromDetails.isNull() || toDetails.isNull())
-        return make_tuple(h256s(), h256(), 0);
+        return std::make_tuple(h256s(), h256(), 0);
 
     unsigned fn = fromDetails.number;
     unsigned tn = toDetails.number;
@@ -1196,7 +1195,7 @@ tuple<h256s, h256, unsigned> BlockChain::treeRoute(h256 const& _from, h256 const
     unsigned i = ret.size() - (int)(_common && !ret.empty() && !back.empty());
     for (auto it = back.rbegin(); it != back.rend(); ++it)
         ret.push_back(*it);
-    return make_tuple(ret, from, i);
+    return std::make_tuple(ret, from, i);
 }
 
 void BlockChain::noteUsed(h256 const& _h, unsigned _extra) const
@@ -1210,7 +1209,7 @@ void BlockChain::noteUsed(h256 const& _h, unsigned _extra) const
         m_inUse.insert(id);
 }
 
-template <class K, class T> static unsigned getHashSize(unordered_map<K, T> const& _map)
+template <class K, class T> static unsigned getHashSize(std::unordered_map<K, T> const& _map)
 {
     unsigned ret = 0;
     for (auto const& i: _map)
@@ -1245,12 +1244,12 @@ void BlockChain::garbageCollect(bool _force)
 {
     updateStats();
 
-    if (!_force && chrono::system_clock::now() < m_lastCollection + c_collectionDuration && m_lastStats.memTotal() < c_maxCacheSize)
+    if (!_force && std::chrono::system_clock::now() < m_lastCollection + c_collectionDuration && m_lastStats.memTotal() < c_maxCacheSize)
         return;
     if (m_lastStats.memTotal() < c_minCacheSize)
         return;
 
-    m_lastCollection = chrono::system_clock::now();
+    m_lastCollection = std::chrono::system_clock::now();
 
     Guard l(x_cacheUsage);
     for (CacheID const& id: m_cacheUsage.back())
@@ -1364,9 +1363,9 @@ static inline unsigned ceilDiv(unsigned n, unsigned d) { return (n + d - 1) / d;
 
 // F = 14. T = 32
 
-vector<unsigned> BlockChain::withBlockBloom(LogBloom const& _b, unsigned _earliest, unsigned _latest) const
+std::vector<unsigned> BlockChain::withBlockBloom(LogBloom const& _b, unsigned _earliest, unsigned _latest) const
 {
-    vector<unsigned> ret;
+    std::vector<unsigned> ret;
 
     // start from the top-level
     unsigned u = upow(c_bloomIndexSize, c_bloomIndexLevels);
@@ -1378,14 +1377,14 @@ vector<unsigned> BlockChain::withBlockBloom(LogBloom const& _b, unsigned _earlie
     return ret;
 }
 
-vector<unsigned> BlockChain::withBlockBloom(LogBloom const& _b, unsigned _earliest, unsigned _latest, unsigned _level, unsigned _index) const
+std::vector<unsigned> BlockChain::withBlockBloom(LogBloom const& _b, unsigned _earliest, unsigned _latest, unsigned _level, unsigned _index) const
 {
     // 14, 32, 1, 0
         // 14, 32, 0, 0
         // 14, 32, 0, 1
         // 14, 32, 0, 2
 
-    vector<unsigned> ret;
+    std::vector<unsigned> ret;
 
     unsigned uCourse = upow(c_bloomIndexSize, _level + 1);
     // 256
@@ -1465,7 +1464,7 @@ bytes BlockChain::block(h256 const& _hash) const
             return it->second;
     }
 
-    string const d = m_blocksDB->lookup(toSlice(_hash));
+    std::string const d = m_blocksDB->lookup(toSlice(_hash));
     if (d.empty())
     {
         cwarn << "Couldn't find requested block:" << _hash;
@@ -1493,7 +1492,7 @@ bytes BlockChain::headerData(h256 const& _hash) const
             return BlockHeader::extractHeader(&it->second).data().toBytes();
     }
 
-    string const d = m_blocksDB->lookup(toSlice(_hash));
+    std::string const d = m_blocksDB->lookup(toSlice(_hash));
     if (d.empty())
     {
         cwarn << "Couldn't find requested block:" << _hash;
