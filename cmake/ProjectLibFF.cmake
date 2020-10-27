@@ -1,7 +1,7 @@
 # Aleth: Ethereum C++ client, tools and libraries.
 # Copyright 2017-2019 Aleth Authors.
 # Licensed under the GNU General Public License, Version 3.
-include(ProjectMPIR)
+#include(ProjectMPIR)
 
 set(prefix "${CMAKE_BINARY_DIR}/deps")
 set(libff_library "${prefix}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}ff${CMAKE_STATIC_LIBRARY_SUFFIX}")
