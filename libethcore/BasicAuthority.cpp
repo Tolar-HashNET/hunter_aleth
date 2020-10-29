@@ -9,7 +9,6 @@
 #include <libethereum/Interface.h>
 #include "Exceptions.h"
 #include "BlockHeader.h"
-using namespace std;
 using namespace dev;
 using namespace eth;
 

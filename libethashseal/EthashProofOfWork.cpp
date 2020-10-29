@@ -7,8 +7,6 @@
 
 #include "EthashProofOfWork.h"
 #include "Ethash.h"
-using namespace std;
-using namespace chrono;
 using namespace dev;
 using namespace eth;
 

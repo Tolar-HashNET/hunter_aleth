@@ -14,7 +14,6 @@
 #include <libdevcore/FileSystem.h>
 #include <json_spirit/JsonSpiritHeaders.h>
 #include <libdevcrypto/Exceptions.h>
-using namespace std;
 using namespace dev;
 namespace js = json_spirit;
 namespace fs = boost::filesystem;
@@ -22,7 +21,7 @@ namespace fs = boost::filesystem;
 static const int c_keyFileVersion = 3;
 
 /// Upgrade the json-format to the current version.
-static js::mValue upgraded(string const& _s)
+static js::mValue upgraded(std::string const& _s)
 {
 	js::mValue v;
 	js::read_string(_s, v);
@@ -86,7 +85,8 @@ void SecretStore::setPath(fs::path const& _path)
 	load();
 }
 
-bytesSec SecretStore::secret(h128 const& _uuid, function<string()> const& _pass, bool _useCache) const
+bytesSec SecretStore::secret(
+    h128 const& _uuid, std::function<std::string()> const& _pass, bool _useCache) const
 {
     auto rit = m_cached.find(_uuid);
     if (_useCache && rit != m_cached.end())
@@ -106,7 +106,8 @@ bytesSec SecretStore::secret(h128 const& _uuid, function<string()> const& _pass,
     return key;
 }
 
-bytesSec SecretStore::secret(Address const& _address, function<string()> const& _pass) const
+bytesSec SecretStore::secret(
+    Address const& _address, std::function<std::string()> const& _pass) const
 {
 	bytesSec ret;
 	if (auto k = key(_address))
@@ -114,7 +115,7 @@ bytesSec SecretStore::secret(Address const& _address, function<string()> const& 
 	return ret;
 }
 
-bytesSec SecretStore::secret(string const& _content, string const& _pass)
+bytesSec SecretStore::secret(std::string const& _content, std::string const& _pass)
 {
 	try
 	{
@@ -129,22 +130,22 @@ bytesSec SecretStore::secret(string const& _content, string const& _pass)
 	}
 }
 
-h128 SecretStore::importSecret(bytesSec const& _s, string const& _pass)
+h128 SecretStore::importSecret(bytesSec const& _s, std::string const& _pass)
 {
 	h128 r = h128::random();
 	EncryptedKey key{encrypt(_s.ref(), _pass), toUUID(r), KeyPair(Secret(_s)).address()};
 	m_cached[r] = _s;
-	m_keys[r] = move(key);
+    m_keys[r] = std::move(key);
 	save();
 	return r;
 }
 
-h128 SecretStore::importSecret(bytesConstRef _s, string const& _pass)
+h128 SecretStore::importSecret(bytesConstRef _s, std::string const& _pass)
 {
 	h128 r = h128::random();
 	EncryptedKey key{encrypt(_s, _pass), toUUID(r), KeyPair(Secret(_s)).address()};
 	m_cached[r] = bytesSec(_s);
-	m_keys[r] = move(key);
+    m_keys[r] = std::move(key);
 	save();
 	return r;
 }
@@ -170,7 +171,7 @@ void SecretStore::save(fs::path const& _keysPath)
 	DEV_IGNORE_EXCEPTIONS(fs::permissions(_keysPath, fs::owner_all));
 	for (auto& k: m_keys)
 	{
-		string uuid = toUUID(k.first);
+        std::string uuid = toUUID(k.first);
 		fs::path filename = (_keysPath / uuid).string() + ".json";
 		js::mObject v;
 		js::mValue crypto;
@@ -211,10 +212,10 @@ void SecretStore::load(fs::path const& _keysPath)
 h128 SecretStore::readKey(fs::path const& _file, bool _takeFileOwnership)
 {
 	ctrace << "Reading" << _file.string();
-	return readKeyContent(contentsString(_file), _takeFileOwnership ? _file : string());
+    return readKeyContent(contentsString(_file), _takeFileOwnership ? _file : std::string());
 }
 
-h128 SecretStore::readKeyContent(string const& _content, fs::path const& _file)
+h128 SecretStore::readKeyContent(std::string const& _content, fs::path const& _file)
 {
 	try
 	{
@@ -241,7 +242,8 @@ h128 SecretStore::readKeyContent(string const& _content, fs::path const& _file)
 	}
 }
 
-bool SecretStore::recode(Address const& _address, string const& _newPass, function<string()> const& _pass, KDF _kdf)
+bool SecretStore::recode(Address const& _address, std::string const& _newPass,
+    std::function<std::string()> const& _pass, KDF _kdf)
 {
 	if (auto k = key(_address))
 	{
@@ -258,7 +260,8 @@ bool SecretStore::recode(Address const& _address, string const& _newPass, functi
 	return false;
 }
 
-pair<h128 const, SecretStore::EncryptedKey> const* SecretStore::key(Address const& _address) const
+std::pair<h128 const, SecretStore::EncryptedKey> const* SecretStore::key(
+    Address const& _address) const
 {
 	for (auto const& k: m_keys)
 		if (k.second.address == _address)
@@ -266,7 +269,7 @@ pair<h128 const, SecretStore::EncryptedKey> const* SecretStore::key(Address cons
 	return nullptr;
 }
 
-pair<h128 const, SecretStore::EncryptedKey>* SecretStore::key(Address const& _address)
+std::pair<h128 const, SecretStore::EncryptedKey>* SecretStore::key(Address const& _address)
 {
 	for (auto& k: m_keys)
 		if (k.second.address == _address)
@@ -274,7 +277,8 @@ pair<h128 const, SecretStore::EncryptedKey>* SecretStore::key(Address const& _ad
 	return nullptr;
 }
 
-bool SecretStore::recode(h128 const& _uuid, string const& _newPass, function<string()> const& _pass, KDF _kdf)
+bool SecretStore::recode(h128 const& _uuid, std::string const& _newPass,
+    std::function<std::string()> const& _pass, KDF _kdf)
 {
 	bytesSec s = secret(_uuid, _pass, true);
 	if (s.empty())
@@ -285,7 +289,7 @@ bool SecretStore::recode(h128 const& _uuid, string const& _newPass, function<str
 	return true;
 }
 
-static bytesSec deriveNewKey(string const& _pass, KDF _kdf, js::mObject& o_ret)
+static bytesSec deriveNewKey(std::string const& _pass, KDF _kdf, js::mObject& o_ret)
 {
 	unsigned dklen = 32;
 	unsigned iterations = 1 << 18;
@@ -321,7 +325,7 @@ static bytesSec deriveNewKey(string const& _pass, KDF _kdf, js::mObject& o_ret)
 	}
 }
 
-string SecretStore::encrypt(bytesConstRef _v, string const& _pass, KDF _kdf)
+std::string SecretStore::encrypt(bytesConstRef _v, std::string const& _pass, KDF _kdf)
 {
 	js::mObject ret;
 
@@ -351,7 +355,7 @@ string SecretStore::encrypt(bytesConstRef _v, string const& _pass, KDF _kdf)
 	return js::write_string(js::mValue(ret), true);
 }
 
-bytesSec SecretStore::decrypt(string const& _v, string const& _pass)
+bytesSec SecretStore::decrypt(std::string const& _v, std::string const& _pass)
 {
 	js::mObject o;
 	{

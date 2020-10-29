@@ -14,7 +14,6 @@
 #include <chrono>
 #include <thread>
 
-using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
@@ -32,7 +31,7 @@ constexpr unsigned c_peerTimeoutSeconds = 10;
 constexpr int c_minBlockBroadcastPeers = 4;
 constexpr size_t c_maxSendNewBlocksCount = 20;
 
-string toString(Asking _a)
+std::string toString(Asking _a)
 {
     switch (_a)
     {
@@ -59,7 +58,7 @@ string toString(Asking _a)
 class EthereumPeerObserver : public EthereumPeerObserverFace
 {
 public:
-    EthereumPeerObserver(shared_ptr<BlockChainSync> _sync, TransactionQueue& _tq)
+    EthereumPeerObserver(std::shared_ptr<BlockChainSync> _sync, TransactionQueue& _tq)
       : m_sync(_sync), m_tq(_tq)
     {}
 
@@ -80,7 +79,7 @@ public:
     void onPeerTransactions(NodeID const& _peerID, RLP const& _r) override
     {
         unsigned itemCount = _r.itemCount();
-        LOG(m_logger) << "Transactions (" << dec << itemCount << " entries)";
+        LOG(m_logger) << "Transactions (" << std::dec << itemCount << " entries)";
         m_tq.enqueue(_r, _peerID);
     }
 
@@ -157,17 +156,17 @@ public:
     void onPeerNodeData(NodeID const& /* _peerID */, RLP const& _r) override
     {
         unsigned itemCount = _r.itemCount();
-        LOG(m_logger) << "Node Data (" << dec << itemCount << " entries)";
+        LOG(m_logger) << "Node Data (" << std::dec << itemCount << " entries)";
     }
 
     void onPeerReceipts(NodeID const& /* _peerID */, RLP const& _r) override
     {
         unsigned itemCount = _r.itemCount();
-        LOG(m_logger) << "Receipts (" << dec << itemCount << " entries)";
+        LOG(m_logger) << "Receipts (" << std::dec << itemCount << " entries)";
     }
 
 private:
-    shared_ptr<BlockChainSync> m_sync;
+    std::shared_ptr<BlockChainSync> m_sync;
     TransactionQueue& m_tq;
 
     Logger m_logger{createLogger(VerbosityDebug, "host")};
@@ -178,7 +177,7 @@ class EthereumHostData : public EthereumHostDataFace
 public:
     EthereumHostData(BlockChain const& _chain, OverlayDB const& _db) : m_chain(_chain), m_db(_db) {}
 
-    pair<bytes, unsigned> blockHeaders(
+    std::pair<bytes, unsigned> blockHeaders(
         RLP const& _blockId, unsigned _maxHeaders, u256 _skip, bool _reverse) const override
     {
         auto numHeadersToSend = _maxHeaders;
@@ -283,7 +282,7 @@ public:
 
         bytes rlp;
         unsigned itemCount = 0;
-        vector<h256> hashes;
+        std::vector<h256> hashes;
         for (unsigned i = 0; i != numHeadersToSend; ++i)
         {
             if (!blockHash || !m_chain.isKnown(blockHash))
@@ -301,7 +300,7 @@ public:
         return make_pair(rlp, itemCount);
     }
 
-    pair<bytes, unsigned> blockBodies(RLP const& _blockHashes) const override
+    std::pair<bytes, unsigned> blockBodies(RLP const& _blockHashes) const override
     {
         unsigned const count = static_cast<unsigned>(_blockHashes.itemCount());
 
@@ -357,7 +356,7 @@ public:
         return data;
     }
 
-    pair<bytes, unsigned> receipts(RLP const& _blockHashes) const override
+    std::pair<bytes, unsigned> receipts(RLP const& _blockHashes) const override
     {
         unsigned const count = static_cast<unsigned>(_blockHashes.itemCount());
 
@@ -388,7 +387,7 @@ private:
 };
 }  // namespace
 
-EthereumCapability::EthereumCapability(shared_ptr<p2p::CapabilityHostFace> _host,
+EthereumCapability::EthereumCapability(std::shared_ptr<p2p::CapabilityHostFace> _host,
     BlockChain const& _ch, OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq,
     u256 _networkId)
   : m_host(move(_host)),
@@ -453,7 +452,7 @@ void EthereumCapability::completeSync()
 void EthereumCapability::maintainTransactions()
 {
     // Send any new transactions.
-    unordered_map<NodeID, std::vector<size_t>> peerTransactions;
+    std::unordered_map<NodeID, std::vector<size_t>> peerTransactions;
     auto ts = m_tq.topTransactions(c_maxSendTransactionsCount);
     {
         for (size_t i = 0; i < ts.size(); ++i)
@@ -496,10 +495,10 @@ void EthereumCapability::maintainTransactions()
     }
 }
 
-vector<NodeID> EthereumCapability::selectPeers(
+std::vector<NodeID> EthereumCapability::selectPeers(
     std::function<bool(EthereumPeer const&)> const& _predicate) const
 {
-    vector<NodeID> allowed;
+    std::vector<NodeID> allowed;
     for (auto const& peer : m_peers)
     {
         if (_predicate(peer.second))
@@ -630,7 +629,7 @@ bool EthereumCapability::interpretCapabilityPacket(
     NodeID const& _peerID, unsigned _id, RLP const& _r)
 {
     auto& remotePeer = peer(_peerID);
-    remotePeer.setLastAsk(std::chrono::system_clock::to_time_t(chrono::system_clock::now()));
+    remotePeer.setLastAsk(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
 
     try
     {
@@ -679,7 +678,7 @@ bool EthereumCapability::interpretCapabilityPacket(
                 break;
             }
 
-            pair<bytes, unsigned> const rlpAndItemCount =
+            std::pair<bytes, unsigned> const rlpAndItemCount =
                 m_hostData->blockHeaders(blockId, numHeadersToSend, skip, reverse);
 
             RLPStream s;
@@ -704,7 +703,8 @@ bool EthereumCapability::interpretCapabilityPacket(
         case GetBlockBodiesPacket:
         {
             unsigned count = static_cast<unsigned>(_r.itemCount());
-            LOG(m_logger) << "GetBlockBodies (" << dec << count << " entries) from " << _peerID;
+            LOG(m_logger) << "GetBlockBodies (" << std::dec << count << " entries) from "
+                          << _peerID;
 
             if (!count)
             {
@@ -713,7 +713,7 @@ bool EthereumCapability::interpretCapabilityPacket(
                 break;
             }
 
-            pair<bytes, unsigned> const rlpAndItemCount = m_hostData->blockBodies(_r);
+            std::pair<bytes, unsigned> const rlpAndItemCount = m_hostData->blockBodies(_r);
 
             m_host->updateRating(_peerID, 0);
             RLPStream s;
@@ -743,7 +743,7 @@ bool EthereumCapability::interpretCapabilityPacket(
         {
             unsigned itemCount = _r.itemCount();
 
-            LOG(m_logger) << "BlockHashes (" << dec << itemCount << " entries) "
+            LOG(m_logger) << "BlockHashes (" << std::dec << itemCount << " entries) "
                           << (itemCount ? "" : " : NoMoreHashes") << " from " << _peerID;
 
             if (itemCount > c_maxIncomingNewHashesCount)
@@ -753,7 +753,7 @@ bool EthereumCapability::interpretCapabilityPacket(
                 itemCount = c_maxIncomingNewHashesCount;
             }
 
-            vector<pair<h256, u256>> hashes(itemCount);
+            std::vector<std::pair<h256, u256>> hashes(itemCount);
             for (unsigned i = 0; i < itemCount; ++i)
                 hashes[i] = std::make_pair(_r[i][0].toHash<h256>(), _r[i][1].toInt<u256>());
 
@@ -769,7 +769,7 @@ bool EthereumCapability::interpretCapabilityPacket(
                 m_host->updateRating(_peerID, -10);
                 break;
             }
-            LOG(m_logger) << "GetNodeData (" << dec << count << " entries) from " << _peerID;
+            LOG(m_logger) << "GetNodeData (" << std::dec << count << " entries) from " << _peerID;
 
             strings const data = m_hostData->nodeData(_r);
 
@@ -790,9 +790,9 @@ bool EthereumCapability::interpretCapabilityPacket(
                 m_host->updateRating(_peerID, -10);
                 break;
             }
-            LOG(m_logger) << "GetReceipts (" << dec << count << " entries) from " << _peerID;
+            LOG(m_logger) << "GetReceipts (" << std::dec << count << " entries) from " << _peerID;
 
-            pair<bytes, unsigned> const rlpAndItemCount = m_hostData->receipts(_r);
+            std::pair<bytes, unsigned> const rlpAndItemCount = m_hostData->receipts(_r);
 
             m_host->updateRating(_peerID, 0);
             RLPStream s;
@@ -894,11 +894,11 @@ void EthereumCapability::setAsking(NodeID const& _peerID, Asking _a)
     auto& peerStatus = itPeerStatus->second;
 
     peerStatus.setAsking(_a);
-    peerStatus.setLastAsk(std::chrono::system_clock::to_time_t(chrono::system_clock::now()));
+    peerStatus.setLastAsk(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
 
     m_host->addNote(_peerID, "ask", ::toString(_a));
     m_host->addNote(_peerID, "sync",
-        string(isCriticalSyncing(_peerID) ? "ONGOING" : "holding") +
+        std::string(isCriticalSyncing(_peerID) ? "ONGOING" : "holding") +
             (needsSyncing(_peerID) ? " & needed" : ""));
 }
 

@@ -14,7 +14,6 @@
 #include <libevm/LegacyVM.h>
 #include <libevm/VMFactory.h>
 
-using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
@@ -24,7 +23,7 @@ Address const c_RipemdPrecompiledAddress{0x03};
 
 std::string dumpStackAndMemory(LegacyVM const& _vm)
 {
-    ostringstream o;
+    std::ostringstream o;
     o << "\n    STACK\n";
     for (auto i : _vm.stack())
         o << (h256)i << "\n";
@@ -36,10 +35,10 @@ std::string dumpStackAndMemory(LegacyVM const& _vm)
 
 std::string dumpStorage(ExtVM const& _ext)
 {
-    ostringstream o;
+    std::ostringstream o;
     o << "    STORAGE\n";
     for (auto const& i : _ext.state().storage(_ext.myAddress))
-        o << showbase << hex << i.second.first << ": " << i.second.second << "\n";
+        o << std::showbase << std::hex << i.second.first << ": " << i.second.second << "\n";
     return o.str();
 };
 }  // namespace
@@ -215,7 +214,7 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
             h256 codeHash = m_s.codeHash(_p.codeAddress);
             // Contract will be executed with the version stored in account
             auto const version = m_s.version(_p.codeAddress);
-            m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, _p.receiveAddress,
+            m_ext = std::make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, _p.receiveAddress,
                 _p.senderAddress, _origin, _p.apparentValue, _gasPrice, _p.data, &c, codeHash,
                 version, m_depth, false, _p.staticCall);
         }
@@ -297,7 +296,8 @@ bool Executive::executeCreate(Address const& _sender, u256 const& _endowment, u2
 
     // Schedule _init execution if not empty.
     if (!_init.empty())
-        m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, m_newAddress, _sender, _origin,
+        m_ext = std::make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, m_newAddress, _sender,
+            _origin,
             _endowment, _gasPrice, bytesConstRef(), _init, sha3(_init), _version, m_depth, true,
             false);
     else
@@ -319,9 +319,10 @@ OnOpFunc Executive::simpleTrace()
         if (vm)
             LOG(traceLogger) << dumpStackAndMemory(*vm);
         LOG(traceLogger) << dumpStorage(ext);
-        LOG(traceLogger) << " < " << dec << ext.depth << " : " << ext.myAddress << " : #" << steps
-                         << " : " << hex << setw(4) << setfill('0') << PC << " : "
-                         << instructionInfo(inst).name << " : " << dec << gas << " : -" << dec
+        LOG(traceLogger) << " < " << std::dec << ext.depth << " : " << ext.myAddress << " : #"
+                         << steps << " : " << std::hex << std::setw(4) << std::setfill('0') << PC
+                         << " : " << instructionInfo(inst).name << " : " << std::dec << gas
+                         << " : -" << std::dec
                          << gasCost << " : " << newMemSize << "x32"
                          << " >";
     };
@@ -432,7 +433,7 @@ bool Executive::finalize()
         // Refunds must be applied before the miner gets the fees.
         assert(m_ext->sub.refunds >= 0);
         int64_t maxRefund = (static_cast<int64_t>(m_t.gas()) - static_cast<int64_t>(m_gas)) / 2;
-        m_gas += min(maxRefund, m_ext->sub.refunds);
+        m_gas += std::min(maxRefund, m_ext->sub.refunds);
     }
 
     if (m_t)

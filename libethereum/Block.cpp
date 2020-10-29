@@ -18,7 +18,6 @@
 #include <libevm/VMFactory.h>
 #include <boost/filesystem.hpp>
 #include <ctime>
-using namespace std;
 using namespace dev;
 using namespace dev::eth;
 namespace fs = boost::filesystem;
@@ -105,7 +104,7 @@ void Block::resetCurrent(int64_t _timestamp)
     m_transactionSet.clear();
     m_currentBlock = BlockHeader();
     m_currentBlock.setAuthor(m_author);
-    m_currentBlock.setTimestamp(max(m_previousBlock.timestamp() + 1, _timestamp));
+    m_currentBlock.setTimestamp(std::max(m_previousBlock.timestamp() + 1, _timestamp));
     m_currentBytes.clear();
     sealEngine()->populateFromParent(m_currentBlock, m_previousBlock);
 
@@ -163,10 +162,10 @@ void Block::populateFromChain(BlockChain const& _bc, h256 const& _h)
     // message.
     if (m_state.db().lookup(blockHeader.stateRoot()).empty())
     {
-        cerr << "Unable to populate block " << blockHeader.hash() << " - state root "
+        std::cerr << "Unable to populate block " << blockHeader.hash() << " - state root "
              << blockHeader.stateRoot() << " not found in database.";
-        cerr << "Database corrupt: contains block without state root: " << blockHeader;
-        cerr << "Try rescuing the database by running: eth --rescue";
+        std::cerr << "Database corrupt: contains block without state root: " << blockHeader;
+        std::cerr << "Try rescuing the database by running: eth --rescue";
         BOOST_THROW_EXCEPTION(InvalidStateRoot() << errinfo_target(blockHeader.stateRoot()));
     }
 
@@ -272,7 +271,8 @@ bool Block::sync(BlockChain const& _bc, h256 const& _block, BlockHeader const& _
     return ret;
 }
 
-pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQueue& _tq, GasPricer const& _gp, unsigned msTimeout)
+std::pair<TransactionReceipts, bool> Block::sync(
+    BlockChain const& _bc, TransactionQueue& _tq, GasPricer const& _gp, unsigned msTimeout)
 {
     if (isSealed())
         BOOST_THROW_EXCEPTION(InvalidOperationOnSealedBlock());
@@ -280,16 +280,17 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
     noteChain(_bc);
 
     // TRANSACTIONS
-    pair<TransactionReceipts, bool> ret;
+    std::pair<TransactionReceipts, bool> ret;
 
     Transactions transactions = _tq.topTransactions(c_maxSyncTransactions, m_transactionSet);
     ret.second = (transactions.size() == c_maxSyncTransactions);  // say there's more to the caller
                                                                   // if we hit the limit
 
     assert(_bc.currentHash() == m_currentBlock.parentHash());
-    auto deadline =  chrono::steady_clock::now() + chrono::milliseconds(msTimeout);
+    auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(msTimeout);
 
-    for (int goodTxs = max(0, (int)transactions.size() - 1); goodTxs < (int)transactions.size();)
+    for (int goodTxs = std::max(0, (int)transactions.size() - 1);
+         goodTxs < (int)transactions.size();)
     {
         goodTxs = 0;
         for (auto const& t : transactions)
@@ -370,7 +371,7 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
                     cwarn << t.sha3() << "Transaction caused low-level exception :(";
                 }
             }
-        if (chrono::steady_clock::now() > deadline)
+        if (std::chrono::steady_clock::now() > deadline)
         {
             ret.second = true;	// say there's more to the caller if we ended up crossing the deadline.
             break;
@@ -452,7 +453,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 
     RLP rlp(_block.block);
 
-    vector<bytes> receipts;
+    std::vector<bytes> receipts;
 
     // All ok with the block generally. Play back the transactions now...
     unsigned i = 0;
@@ -511,7 +512,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
         BOOST_THROW_EXCEPTION(ex);
     }
 
-    vector<BlockHeader> rewarded;
+    std::vector<BlockHeader> rewarded;
     h256Hash excluded;
     DEV_TIMED_ABOVE("allKin", 500)
         excluded = _bc.allKinFrom(m_currentBlock.parentHash(), 6);
@@ -647,7 +648,8 @@ ExecutionResult Block::execute(
     return resultReceipt.first;
 }
 
-void Block::applyRewards(vector<BlockHeader> const& _uncleBlockHeaders, u256 const& _blockReward)
+void Block::applyRewards(
+    std::vector<BlockHeader> const& _uncleBlockHeaders, u256 const& _blockReward)
 {
     u256 r = _blockReward;
     for (auto const& i: _uncleBlockHeaders)
@@ -709,7 +711,7 @@ void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
     else
         m_precommit = m_state;
 
-    vector<BlockHeader> uncleBlockHeaders;
+    std::vector<BlockHeader> uncleBlockHeaders;
 
     RLPStream unclesData;
     unsigned unclesCount = 0;
@@ -830,7 +832,7 @@ bool Block::sealBlock(bytesConstRef _header)
 
 h256 Block::stateRootBeforeTx(unsigned _i) const
 {
-    _i = min<unsigned>(_i, m_transactions.size());
+    _i = std::min<unsigned>(_i, m_transactions.size());
     try
     {
         return (_i > 0 ? receipt(_i - 1).stateRoot() : m_previousBlock.stateRoot());

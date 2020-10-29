@@ -7,7 +7,6 @@
 
 #include <libdevcore/SHA3.h>
 #include "Block.h"
-using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
@@ -69,10 +68,10 @@ bool LogFilter::matches(Block const& _s, unsigned _i) const
 	return matches(_s.receipt(_i)).size() > 0;
 }
 
-vector<LogBloom> LogFilter::bloomPossibilities() const
+std::vector<LogBloom> LogFilter::bloomPossibilities() const
 {
 	// return combination of each of the addresses/topics
-	vector<LogBloom> ret;
+    std::vector<LogBloom> ret;
 
 	// | every address with every topic
 	for (auto const& i: m_addresses)

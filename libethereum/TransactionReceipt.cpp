@@ -8,7 +8,6 @@
 
 #include <boost/variant/get.hpp>
 
-using namespace std;
 using namespace dev;
 using namespace dev::eth;
 

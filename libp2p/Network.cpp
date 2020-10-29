@@ -19,7 +19,6 @@
 #include "UPnP.h"
 #include "Network.h"
 
-using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 
@@ -160,7 +159,7 @@ bi::tcp::endpoint Network::traverseNAT(std::set<bi::address> const& _ifAddresses
 {
     asserts(_listenPort != 0);
 
-    unique_ptr<UPnP> upnp;
+    std::unique_ptr<UPnP> upnp;
     try
     {
         upnp.reset(new UPnP);
@@ -182,7 +181,7 @@ bi::tcp::endpoint Network::traverseNAT(std::set<bi::address> const& _ifAddresses
 
         auto eIP = upnp->externalIP();
         bi::address eIPAddr(bi::make_address(eIP));
-        if (extPort && eIP != string("0.0.0.0") && !isPrivateAddress(eIPAddr))
+        if (extPort && eIP != std::string("0.0.0.0") && !isPrivateAddress(eIPAddr))
         {
             cnetnote << "Punched through NAT and mapped local port " << _listenPort << " onto external port " << extPort << ".";
             cnetnote << "External addr: " << eIP;
@@ -196,11 +195,11 @@ bi::tcp::endpoint Network::traverseNAT(std::set<bi::address> const& _ifAddresses
     return upnpEP;
 }
 
-bi::tcp::endpoint Network::resolveHost(string const& _addr)
+bi::tcp::endpoint Network::resolveHost(std::string const& _addr)
 {
     static boost::asio::io_context s_resolverIoContext;
 
-    vector<string> split;
+    std::vector<std::string> split;
     boost::split(split, _addr, boost::is_any_of(":"));
     unsigned port = dev::p2p::c_defaultListenPort;
 

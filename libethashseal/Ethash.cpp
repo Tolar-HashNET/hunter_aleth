@@ -10,7 +10,6 @@
 
 #include <ethash/ethash.hpp>
 
-using namespace std;
 using namespace dev;
 using namespace eth;
 
@@ -21,7 +20,7 @@ void Ethash::init()
 
 Ethash::Ethash()
 {
-    map<string, GenericFarm<EthashProofOfWork>::SealerDescriptor> sealers;
+    std::map<std::string, GenericFarm<EthashProofOfWork>::SealerDescriptor> sealers;
     sealers["cpu"] = GenericFarm<EthashProofOfWork>::SealerDescriptor{&EthashCPUMiner::instances, [](GenericMiner<EthashProofOfWork>::ConstructionInfo ci){ return new EthashCPUMiner(ci); }};
     m_farm.setSealers(sealers);
     m_farm.onSolutionFound([=](EthashProofOfWork::Solution const& sol)
@@ -94,7 +93,7 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
         ex << errinfo_nonce(nonce(_bi));
         ex << errinfo_mixHash(mixHash(_bi));
         ex << errinfo_seedHash(seedHash(_bi));
-        ex << errinfo_ethashResult(make_tuple(final, mix));
+        ex << errinfo_ethashResult(std::make_tuple(final, mix));
         ex << errinfo_hash256(_bi.hash(WithoutSeal));
         ex << errinfo_difficulty(_bi.difficulty());
         ex << errinfo_target(boundary(_bi));
@@ -206,7 +205,7 @@ bool Ethash::submitEthashWork(h256 const& _mixHash, h64 const& _nonce)
 void Ethash::submitExternalHashrate(u256 const& _rate, h256 const& _id)
 {
     WriteGuard writeGuard(x_externalRates);
-    m_externalRates[_id] = make_pair(_rate, chrono::steady_clock::now());
+    m_externalRates[_id] = std::make_pair(_rate, std::chrono::steady_clock::now());
 }
 
 u256 Ethash::externalHashrate() const
@@ -214,7 +213,7 @@ u256 Ethash::externalHashrate() const
     u256 ret = 0;
     WriteGuard writeGuard(x_externalRates);
     for (auto i = m_externalRates.begin(); i != m_externalRates.end();)
-        if (chrono::steady_clock::now() - i->second.second > chrono::seconds(5))
+        if (std::chrono::steady_clock::now() - i->second.second > std::chrono::seconds(5))
             i = m_externalRates.erase(i);
         else
             ret += i++->second.first;

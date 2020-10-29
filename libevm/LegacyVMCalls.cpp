@@ -3,7 +3,6 @@
 // Licensed under the GNU General Public License, Version 3.
 #include "LegacyVM.h"
 
-using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
@@ -69,7 +68,7 @@ void LegacyVM::throwBadStack(unsigned _removed, unsigned _added)
 void LegacyVM::throwRevertInstruction(owning_bytes_ref&& _output)
 {
     // We can't use BOOST_THROW_EXCEPTION here because it makes a copy of exception inside and RevertInstruction has no copy constructor 
-    throw RevertInstruction(move(_output));
+    throw RevertInstruction(std::move(_output));
 }
 
 void LegacyVM::throwBufferOverrun(bigint const& _endOfAccess)
@@ -157,7 +156,7 @@ void LegacyVM::caseCall()
 
     // TODO: Please check if that does not actually increases the stack size.
     //       That was the case before.
-    unique_ptr<CallParameters> callParams(new CallParameters());
+    std::unique_ptr<CallParameters> callParams(new CallParameters());
 
     // Clear the return data buffer. This will not free the memory.
     m_returnData.clear();

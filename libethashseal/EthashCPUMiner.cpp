@@ -14,7 +14,6 @@
 #include <chrono>
 #include <random>
 
-using namespace std;
 using namespace dev;
 using namespace eth;
 
@@ -47,7 +46,7 @@ void EthashCPUMiner::startWorking()
     if (!m_thread)
     {
         m_shouldStop = false;
-        m_thread.reset(new thread(&EthashCPUMiner::minerBody, this));
+        m_thread.reset(new std::thread(&EthashCPUMiner::minerBody, this));
     }
 }
 
@@ -92,6 +91,6 @@ void EthashCPUMiner::minerBody()
 
 std::string EthashCPUMiner::platformInfo()
 {
-    string baseline = toString(std::thread::hardware_concurrency()) + "-thread CPU";
+    std::string baseline = toString(std::thread::hardware_concurrency()) + "-thread CPU";
     return baseline;
 }

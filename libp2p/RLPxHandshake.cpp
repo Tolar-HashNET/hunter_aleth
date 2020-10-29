@@ -6,7 +6,6 @@
 #include "Session.h"
 #include "Peer.h"
 #include "RLPxHandshake.h"
-using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 using namespace dev::crypto;
@@ -38,7 +37,7 @@ RLPXHandshake::RLPXHandshake(
     m_logger.add_attribute("Prefix", prefixAttr);
     m_errorLogger.add_attribute("Prefix", prefixAttr);
 
-    stringstream remoteInfoStream;
+    std::stringstream remoteInfoStream;
     remoteInfoStream << "(" << _remote;
     if (remoteSocketConnected())
         remoteInfoStream << "@" << m_socket->remoteEndpoint();
@@ -251,7 +250,7 @@ void RLPXHandshake::error(boost::system::error_code _ech)
 {
     m_host->onHandshakeFailed(m_remote, m_failureReason);
 
-    stringstream errorStream;
+    std::stringstream errorStream;
     errorStream << "Handshake failed";
     if (_ech)
         errorStream << " (I/O error: " << _ech.message() << ")";

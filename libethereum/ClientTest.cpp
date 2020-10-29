@@ -10,7 +10,6 @@
 #include <boost/filesystem/path.hpp>
 #include <future>
 
-using namespace std;
 using namespace dev;
 using namespace dev::eth;
 using namespace p2p;
@@ -56,7 +55,7 @@ void ClientTest::onBadBlock(Exception& _ex)
     Client::onBadBlock(_ex);
 }
 
-void ClientTest::setChainParams(string const& _genesis)
+void ClientTest::setChainParams(std::string const& _genesis)
 {
     try
     {
@@ -123,9 +122,9 @@ bool ClientTest::mineBlocks(unsigned _count) noexcept
             });
 
         startSealing();
-        future_status ret = allBlocksImported.get_future().wait_for(
+        std::future_status ret = allBlocksImported.get_future().wait_for(
             std::chrono::seconds(m_singleBlockMaxMiningTimeInSeconds * _count));
-        return (ret == future_status::ready);
+        return (ret == std::future_status::ready);
     }
     catch (std::exception const&)
     {
@@ -144,7 +143,7 @@ bool ClientTest::completeSync()
     return true;
 }
 
-h256 ClientTest::importRawBlock(const string& _blockRLP)
+h256 ClientTest::importRawBlock(const std::string& _blockRLP)
 {
     bytes blockBytes = jsToBytes(_blockRLP, OnFailed::Throw);
     h256 blockHash = BlockHeader::headerHashFromBlock(blockBytes);
@@ -163,8 +162,8 @@ h256 ClientTest::importRawBlock(const string& _blockRLP)
     bool moreToImport = true;
     while (moreToImport)
     {
-        tie(ignore, moreToImport, ignore) = syncQueue(100000);
-        this_thread::sleep_for(chrono::milliseconds(100));
+        std::tie(std::ignore, moreToImport, std::ignore) = syncQueue(100000);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
     // check that it was really imported and not rejected as invalid

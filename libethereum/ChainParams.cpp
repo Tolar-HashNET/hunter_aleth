@@ -16,7 +16,6 @@
 #include <libethcore/SealEngine.h>
 #include <boost/algorithm/string.hpp>
 
-using namespace std;
 using namespace dev;
 using namespace eth;
 using namespace eth::validation;
@@ -48,14 +47,14 @@ ChainParams::ChainParams()
     for (unsigned i = 1; i <= 4; ++i)
         genesisState[Address(i)] = Account(0, 1);
     // Setup default precompiled contracts as equal to genesis of Frontier.
-    precompiled.insert(make_pair(Address(1), PrecompiledContract("ecrecover")));
-    precompiled.insert(make_pair(Address(2), PrecompiledContract("sha256")));
-    precompiled.insert(make_pair(Address(3), PrecompiledContract("ripemd160")));
-    precompiled.insert(make_pair(Address(4), PrecompiledContract("identity")));
+    precompiled.insert(std::make_pair(Address(1), PrecompiledContract("ecrecover")));
+    precompiled.insert(std::make_pair(Address(2), PrecompiledContract("sha256")));
+    precompiled.insert(std::make_pair(Address(3), PrecompiledContract("ripemd160")));
+    precompiled.insert(std::make_pair(Address(4), PrecompiledContract("identity")));
 }
 
 ChainParams::ChainParams(
-    string const& _json, h256 const& _stateRoot, boost::filesystem::path const& _configPath)
+    std::string const& _json, h256 const& _stateRoot, boost::filesystem::path const& _configPath)
 {
     loadConfig(_json, _stateRoot, _configPath);
 }
@@ -71,7 +70,7 @@ ChainParams::ChainParams(std::string const& _configJson, AdditionalEIPs const& _
 }
 
 void ChainParams::loadConfig(
-    string const& _json, h256 const& _stateRoot, boost::filesystem::path const& _configPath)
+    std::string const& _json, h256 const& _stateRoot, boost::filesystem::path const& _configPath)
 {
     js::mValue val;
 
@@ -107,7 +106,7 @@ void ChainParams::loadConfig(
     if (params.count(c_blockReward))
         setBlockReward(fromBigEndian<u256>(fromHex(params[c_blockReward].get_str())));
 
-    auto setOptionalU256Parameter = [&params](u256 &_destination, string const& _name)
+    auto setOptionalU256Parameter = [&params](u256& _destination, std::string const& _name)
     {
         if (params.count(_name))
             _destination = fromBigEndian<u256>(fromHex(params.at(_name).get_str()));
@@ -143,12 +142,12 @@ void ChainParams::loadConfig(
     allowFutureBlocks = params.count(c_allowFutureBlocks);
 
     // genesis
-    string genesisStr = js::write_string(obj[c_genesis], false);
+    std::string genesisStr = js::write_string(obj[c_genesis], false);
     loadGenesis(genesisStr, _stateRoot);
     // genesis state
     if (contains(obj, c_accounts))
     {
-        string genesisStateStr = js::write_string(obj[c_accounts], false);
+        std::string genesisStateStr = js::write_string(obj[c_accounts], false);
         genesisState = jsonToAccountMap(genesisStateStr, accountStartNonce, nullptr, _configPath);
     }
 
@@ -167,7 +166,7 @@ void ChainParams::loadConfig(
     stateRoot = _stateRoot ? _stateRoot : calculateStateRoot(true);
 }
 
-void ChainParams::loadGenesis(string const& _json, h256 const& _stateRoot)
+void ChainParams::loadGenesis(std::string const& _json, h256 const& _stateRoot)
 {
     js::mValue val;
     js::read_string(_json, val);

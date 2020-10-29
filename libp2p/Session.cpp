@@ -11,20 +11,20 @@
 #include <libdevcore/Exceptions.h>
 #include <chrono>
 
-using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 
-Session::Session(Host* _h, unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s,
+Session::Session(Host* _h, std::unique_ptr<RLPXFrameCoder>&& _io,
+    std::shared_ptr<RLPXSocket> const& _s,
     std::shared_ptr<Peer> const& _n, PeerSessionInfo _info)
   : m_server(_h),
     m_io(move(_io)),
     m_socket(_s),
     m_peer(_n),
     m_info(_info),
-    m_ping(chrono::steady_clock::time_point::max())
+    m_ping(std::chrono::steady_clock::time_point::max())
 {
-    stringstream remoteInfoStream;
+    std::stringstream remoteInfoStream;
     remoteInfoStream << "(" << m_info.id << "@" << m_socket->remoteEndpoint() << ")";
 
     m_logSuffix = remoteInfoStream.str();
@@ -38,14 +38,14 @@ Session::Session(Host* _h, unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLP
     m_capLoggerDetail.add_attribute("Suffix", attr);
 
     m_peer->m_lastDisconnect = NoDisconnect;
-    m_lastReceived = m_connect = chrono::steady_clock::now();
+    m_lastReceived = m_connect = std::chrono::steady_clock::now();
 }
 
 Session::~Session()
 {
     cnetlog << "Closing peer session with " << m_logSuffix;
 
-    m_peer->m_lastConnected = m_peer->m_lastAttempted - chrono::seconds(1);
+    m_peer->m_lastConnected = m_peer->m_lastAttempted - std::chrono::seconds(1);
 
     // Read-chain finished for one reason or another.
     for (auto& i : m_capabilities)
@@ -95,7 +95,7 @@ int Session::rating() const
 
 bool Session::readPacket(uint16_t _capId, unsigned _packetType, RLP const& _r)
 {
-    m_lastReceived = chrono::steady_clock::now();
+    m_lastReceived = std::chrono::steady_clock::now();
     LOG(m_netLoggerDetail) << "Received " << capabilityPacketTypeToString(_packetType) << " ("
                            << _packetType << ") from";
     try // Generic try-catch block designed to capture RLP format errors - TODO: give decent diagnostics, make a bit more specific over what is caught.
@@ -141,7 +141,7 @@ bool Session::interpretP2pPacket(P2pPacketType _t, RLP const& _r)
     {
     case DisconnectPacket:
     {
-        string reason = "Unspecified";
+        std::string reason = "Unspecified";
         auto r = (DisconnectReason)_r[0].toInt<int>();
         if (!_r[0].isInt())
             drop(BadProtocol);
@@ -166,7 +166,8 @@ bool Session::interpretP2pPacket(P2pPacketType _t, RLP const& _r)
             m_info.lastPing = std::chrono::steady_clock::now() - m_ping;
             LOG(m_capLoggerDetail)
                 << "Ping latency: "
-                << chrono::duration_cast<chrono::milliseconds>(m_info.lastPing).count() << " ms";
+                << std::chrono::duration_cast<std::chrono::milliseconds>(m_info.lastPing).count()
+                << " ms";
         }
         break;
     default:
@@ -257,7 +258,7 @@ void Session::write()
 
 namespace
 {
-    void halveAtomicInt(atomic<int>& i)
+void halveAtomicInt(std::atomic<int>& i)
     {
         // atomic<int> doesn't have /= operator, so we do it manually
         int oldInt = 0;
@@ -372,7 +373,7 @@ void Session::doRead()
                     if (!checkPacket(frame))
                     {
                         LOG(m_netLogger) << "Received invalid message. Size: " << frame.size()
-                                         << " bytes, message: " << toHex(frame) << endl;
+                                         << " bytes, message: " << toHex(frame) << std::endl;
                         disconnect(BadProtocol);
                         return;
                     }

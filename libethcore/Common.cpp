@@ -12,7 +12,6 @@
 #include "Exceptions.h"
 #include "BlockHeader.h"
 
-using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
@@ -49,9 +48,9 @@ Address toAddress(std::string const& _s)
 	BOOST_THROW_EXCEPTION(InvalidAddress());
 }
 
-vector<pair<u256, string>> const& units()
+std::vector<std::pair<u256, std::string>> const& units()
 {
-	static const vector<pair<u256, string>> s_units =
+    static const std::vector<std::pair<u256, std::string>> s_units =
 	{
 		{exp10<54>(), "Uether"},
 		{exp10<51>(), "Vether"},
@@ -79,7 +78,7 @@ vector<pair<u256, string>> const& units()
 
 std::string formatBalance(bigint const& _b)
 {
-	ostringstream ret;
+    std::ostringstream ret;
 	u256 b;
 	if (_b < 0)
 	{
@@ -94,7 +93,7 @@ std::string formatBalance(bigint const& _b)
 		ret << (b / units()[0].first) << " " << units()[0].second;
 		return ret.str();
 	}
-	ret << setprecision(5);
+    ret << std::setprecision(5);
 	for (auto const& i: units())
 		if (i.first != 1 && b >= i.first)
 		{
@@ -105,36 +104,52 @@ std::string formatBalance(bigint const& _b)
 	return ret.str();
 }
 
-static void badBlockInfo(BlockHeader const& _bi, string const& _err)
+static void badBlockInfo(BlockHeader const& _bi, std::string const& _err)
 {
-	string const c_line = EthReset EthOnMaroon + string(80, ' ') + EthReset;
-	string const c_border = EthReset EthOnMaroon + string(2, ' ') + EthReset EthMaroonBold;
-	string const c_space = c_border + string(76, ' ') + c_border + EthReset;
-	stringstream ss;
+    std::string const c_line = EthReset EthOnMaroon + std::string(80, ' ') + EthReset;
+    std::string const c_border =
+        EthReset EthOnMaroon + std::string(2, ' ') + EthReset EthMaroonBold;
+    std::string const c_space = c_border + std::string(76, ' ') + c_border + EthReset;
+    std::stringstream ss;
 	ss << c_line << "\n";
 	ss << c_space << "\n";
-	ss << c_border + "  Import Failure     " + _err + string(max<int>(0, 53 - _err.size()), ' ') + "  " + c_border << "\n";
+    ss << c_border + "  Import Failure     " + _err +
+              std::string(std::max<int>(0, 53 - _err.size()), ' ') + "  " + c_border
+       << "\n";
 	ss << c_space << "\n";
-	string bin = toString(_bi.number());
-	ss << c_border + ("                     Bad Block #" + string(max<int>(0, 8 - bin.size()), '0') + bin + "." + _bi.hash().abridged() + "                    ") + c_border << "\n";
+    std::string bin = toString(_bi.number());
+    ss << c_border +
+              ("                     Bad Block #" +
+                  std::string(std::max<int>(0, 8 - bin.size()), '0') +
+                  bin + "." + _bi.hash().abridged() + "                    ") +
+              c_border
+       << "\n";
 	ss << c_space << "\n";
 	ss << c_line;
 	cwarn << "\n" + ss.str();
 }
 
-void badBlock(bytesConstRef _block, string const& _err)
+void badBlock(bytesConstRef _block, std::string const& _err)
 {
 	BlockHeader bi;
 	DEV_IGNORE_EXCEPTIONS(bi = BlockHeader(_block));
 	badBlockInfo(bi, _err);
 }
 
-string TransactionSkeleton::userReadable(bool _toProxy, function<pair<bool, string>(TransactionSkeleton const&)> const& _getNatSpec, function<string(Address const&)> const& _formatAddress) const
+std::string TransactionSkeleton::userReadable(bool _toProxy,
+    std::function<std::pair<bool, std::string>(TransactionSkeleton const&)> const& _getNatSpec,
+    std::function<std::string(Address const&)> const& _formatAddress) const
 {
 	if (creation)
 	{
 		// show notice concerning the creation code. TODO: this needs entering into natspec.
-		return string("ÐApp is attempting to create a contract; ") + (_toProxy ? "(this transaction is not executed directly, but forwarded to another ÐApp) " : "") + "to be endowed with " + formatBalance(value) + ", with additional network fees of up to " + formatBalance(gas * gasPrice) + ".\n\nMaximum total cost is " + formatBalance(value + gas * gasPrice) + ".";
+        return std::string("ÐApp is attempting to create a contract; ") +
+               (_toProxy ? "(this transaction is not executed directly, but forwarded to another "
+                           "ÐApp) " :
+                           "") +
+               "to be endowed with " + formatBalance(value) +
+               ", with additional network fees of up to " + formatBalance(gas * gasPrice) +
+               ".\n\nMaximum total cost is " + formatBalance(value + gas * gasPrice) + ".";
 	}
 
 	bool isContract;

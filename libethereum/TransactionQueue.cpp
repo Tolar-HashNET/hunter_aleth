@@ -7,7 +7,6 @@
 #include <libdevcore/Log.h>
 #include <libethcore/Exceptions.h>
 #include "Transaction.h"
-using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
@@ -23,7 +22,7 @@ TransactionQueue::TransactionQueue(unsigned _limit, unsigned _futureLimit)
     m_limit{_limit},
     m_futureLimit{_futureLimit}
 {
-    unsigned verifierThreads = std::max(thread::hardware_concurrency(), 3U) - 2U;
+    unsigned verifierThreads = std::max(std::thread::hardware_concurrency(), 3U) - 2U;
     for (unsigned i = 0; i < verifierThreads; ++i)
         m_verifiers.emplace_back([=](){
             setThreadName("txcheck" + toString(i));
@@ -144,7 +143,7 @@ ImportResult TransactionQueue::manageImport_WITH_LOCK(h256 const& _h, Transactio
             }
         }
         // If valid, append to transactions.
-        insertCurrent_WITH_LOCK(make_pair(_h, _transaction));
+        insertCurrent_WITH_LOCK(std::make_pair(_h, _transaction));
         LOG(m_loggerDetail) << "Queued vaguely legit-looking transaction " << _h;
 
         while (m_current.size() > m_limit)
@@ -255,7 +254,7 @@ void TransactionQueue::setFuture(h256 const& _txHash)
     {
         VerifiedTransaction& t = const_cast<VerifiedTransaction&>(*(m->second)); // set has only const iterators. Since we are moving out of container that's fine
         m_currentByHash.erase(t.transaction.sha3());
-        target.emplace(t.transaction.nonce(), move(t));
+        target.emplace(t.transaction.nonce(), std::move(t));
         m_current.erase(m->second);
         ++m_futureSize;
     }
@@ -278,7 +277,7 @@ void TransactionQueue::makeCurrent_WITH_LOCK(Transaction const& _t)
             while (ft != fs->second.end() && ft->second.transaction.nonce() == nonce)
             {
                 auto inserted = m_currentByAddressAndNonce[_t.from()].insert(std::make_pair(ft->second.transaction.nonce(), PriorityQueue::iterator()));
-                PriorityQueue::iterator handle = m_current.emplace(move(ft->second));
+                PriorityQueue::iterator handle = m_current.emplace(std::move(ft->second));
                 inserted.first->second = handle;
                 m_currentByHash[(*handle).transaction.sha3()] = handle;
                 --m_futureSize;
@@ -370,11 +369,11 @@ void TransactionQueue::verifierBody()
         UnverifiedTransaction work;
 
         {
-            unique_lock<Mutex> l(x_queue);
+            std::unique_lock<Mutex> l(x_queue);
             m_queueReady.wait(l, [&](){ return !m_unverified.empty() || m_aborting; });
             if (m_aborting)
                 return;
-            work = move(m_unverified.front());
+            work = std::move(m_unverified.front());
             m_unverified.pop_front();
         }
 

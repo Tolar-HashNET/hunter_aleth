@@ -9,7 +9,6 @@
 #include "Executive.h"
 #include "State.h"
 
-using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
@@ -60,12 +59,12 @@ std::pair<u256, ExecutionResult> ClientBase::estimateGas(Address const& _from, u
         }
         if (_callback)
             _callback(GasEstimationProgress { lowerBound, upperBound });
-        return make_pair(upperBound, good ? lastGood : er);
+        return std::make_pair(upperBound, good ? lastGood : er);
     }
     catch (...)
     {
         // TODO: Some sort of notification of failure.
-        return make_pair(u256(), ExecutionResult());
+        return std::make_pair(u256(), ExecutionResult());
     }
 }
 
@@ -104,7 +103,7 @@ h256 ClientBase::codeHashAt(Address _a, BlockNumber _block) const
     return blockByNumber(_block).codeHash(_a);
 }
 
-map<h256, pair<u256, u256>> ClientBase::storageAt(Address _a, BlockNumber _block) const
+std::map<h256, std::pair<u256, u256>> ClientBase::storageAt(Address _a, BlockNumber _block) const
 {
     return blockByNumber(_block).storage(_a);
 }
@@ -128,8 +127,9 @@ LocalisedLogEntries ClientBase::logs(unsigned _watchId) const
 LocalisedLogEntries ClientBase::logs(LogFilter const& _f) const
 {
     LocalisedLogEntries ret;
-    unsigned begin = min(bc().number() + 1, (unsigned)numberFromHash(_f.latest()));
-    unsigned end = min(bc().number(), min(begin, (unsigned)numberFromHash(_f.earliest())));
+    unsigned begin = std::min(bc().number() + 1, (unsigned)numberFromHash(_f.latest()));
+    unsigned end =
+        std::min(bc().number(), std::min(begin, (unsigned)numberFromHash(_f.earliest())));
     
     // Handle pending transactions differently as they're not on the block chain.
     if (begin > bc().number())
@@ -168,10 +168,10 @@ LocalisedLogEntries ClientBase::logs(LogFilter const& _f) const
     // will give us pair (2, 3)
     // and we want to get all logs from 1 (ancestor + 1) to 3
     // so we have to move 2a to g + 1
-    end = min(end, (unsigned)numberFromHash(ancestor) + 1);
+    end = std::min(end, (unsigned)numberFromHash(ancestor) + 1);
 
     // Handle blocks from main chain
-    set<unsigned> matchingBlocks;
+    std::set<unsigned> matchingBlocks;
     if (!_f.isRangeFilter())
         for (auto const& i: _f.bloomPossibilities())
             for (auto u: bc().withBlockBloom(i, end, begin))
@@ -209,7 +209,7 @@ unsigned ClientBase::installWatch(LogFilter const& _f, Reaping _r)
         if (!m_filters.count(h))
         {
             LOG(m_loggerWatch) << "FFF" << _f << h;
-            m_filters.insert(make_pair(h, _f));
+            m_filters.insert(std::make_pair(h, _f));
         }
     }
     return installWatch(h, _r);
@@ -266,8 +266,8 @@ LocalisedLogEntries ClientBase::peekWatch(unsigned _watchId) const
     auto& w = m_watches.at(_watchId);
     //	LOG(m_loggerWatch) << "lastPoll updated to " <<
     //chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count();
-    if (w.lastPoll != chrono::system_clock::time_point::max())
-        w.lastPoll = chrono::system_clock::now();
+    if (w.lastPoll != std::chrono::system_clock::time_point::max())
+        w.lastPoll = std::chrono::system_clock::now();
     return w.changes;
 }
 
@@ -281,8 +281,8 @@ LocalisedLogEntries ClientBase::checkWatch(unsigned _watchId)
     //	LOG(m_loggerWatch) << "lastPoll updated to " <<
     //chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count();
     std::swap(ret, w.changes);
-    if (w.lastPoll != chrono::system_clock::time_point::max())
-        w.lastPoll = chrono::system_clock::now();
+    if (w.lastPoll != std::chrono::system_clock::time_point::max())
+        w.lastPoll = std::chrono::system_clock::now();
 
     return ret;
 }
@@ -351,7 +351,7 @@ LocalisedTransactionReceipt ClientBase::localisedTransactionReceipt(h256 const& 
         toAddress(t.from(), t.nonce()));
 }
 
-pair<h256, unsigned> ClientBase::transactionLocation(h256 const& _transactionHash) const
+std::pair<h256, unsigned> ClientBase::transactionLocation(h256 const& _transactionHash) const
 {
     return bc().transactionLocation(_transactionHash);
 }

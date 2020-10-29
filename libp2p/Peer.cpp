@@ -4,7 +4,6 @@
 
 
 #include "Peer.h"
-using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 
@@ -42,7 +41,8 @@ Peer::Peer(Peer const& _original)
 bool Peer::shouldReconnect() const
 {
     return id && endpoint && !isUseless() &&
-           chrono::system_clock::now() > m_lastAttempted + chrono::seconds(fallbackSeconds());
+           std::chrono::system_clock::now() >
+               m_lastAttempted + std::chrono::seconds(fallbackSeconds());
 }
 
 bool Peer::isUseless() const

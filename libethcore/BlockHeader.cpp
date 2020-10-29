@@ -12,7 +12,6 @@
 #include <libethcore/Common.h>
 #include "Exceptions.h"
 #include "BlockHeader.h"
-using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
@@ -225,7 +224,7 @@ void BlockHeader::verify(Strictness _s, BlockHeader const& _parent, bytesConstRe
             GenericTrieDB<StateCacheDB> transactionsTrie(&tm);
             transactionsTrie.init();
 
-            vector<bytesConstRef> txs;
+            std::vector<bytesConstRef> txs;
 
             for (unsigned i = 0; i < txList.itemCount(); ++i)
             {

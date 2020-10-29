@@ -7,7 +7,6 @@
 #include <libp2p/CapabilityHost.h>
 
 
-using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
@@ -15,7 +14,7 @@ namespace
 {
 std::string const c_ethCapability = "eth";
 
-string toString(Asking _a)
+std::string toString(Asking _a)
 {
     switch (_a)
     {

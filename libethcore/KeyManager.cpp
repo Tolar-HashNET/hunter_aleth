@@ -12,7 +12,6 @@
 #include <libdevcore/Guards.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>
-using namespace std;
 using namespace dev;
 using namespace eth;
 namespace js = json_spirit;
@@ -37,13 +36,14 @@ bool KeyManager::exists() const
 	return !contents(appendToFilename(m_keysFile, ".salt")).empty() && !contents(m_keysFile).empty();
 }
 
-void KeyManager::create(string const& _pass)
+void KeyManager::create(std::string const& _pass)
 {
 	m_defaultPasswordDeprecated = asString(h256::random().asBytes());
 	write(_pass, m_keysFile);
 }
 
-bool KeyManager::recode(Address const& _address, string const& _newPass, string const& _hint, function<string()> const& _pass, KDF _kdf)
+bool KeyManager::recode(Address const& _address, std::string const& _newPass,
+    std::string const& _hint, std::function<std::string()> const& _pass, KDF _kdf)
 {
 	noteHint(_newPass, _hint);
 	h128 u = uuid(_address);
@@ -55,7 +55,7 @@ bool KeyManager::recode(Address const& _address, string const& _newPass, string 
 	return true;
 }
 
-bool KeyManager::load(string const& _pass)
+bool KeyManager::load(std::string const& _pass)
 {
 	try
 	{
@@ -80,7 +80,8 @@ bool KeyManager::load(string const& _pass)
 					{
 						m_addrLookup[addr] = uuid;
 						m_uuidLookup[uuid] = addr;
-						m_keyInfo[addr] = KeyInfo(h256(i[2]), string(i[3]), i.itemCount() > 4 ? string(i[4]) : "");
+                        m_keyInfo[addr] = KeyInfo(h256(i[2]), std::string(i[3]),
+                            i.itemCount() > 4 ? std::string(i[4]) : "");
 						if (m_store.noteAddress(uuid, addr))
 							saveRequired = true;
 					}
@@ -88,15 +89,16 @@ bool KeyManager::load(string const& _pass)
 						cwarn << "Missing key:" << uuid << addr;
 				}
 				else
-					m_keyInfo[addr] = KeyInfo(h256(i[2]), string(i[3]), i.itemCount() > 4 ? string(i[4]) : "");
-//				cdebug << toString(addr) << toString(uuid) << toString((h256)i[2]) << (string)i[3];
+                    m_keyInfo[addr] = KeyInfo(
+                        h256(i[2]), std::string(i[3]), i.itemCount() > 4 ? std::string(i[4]) : "");
+                //				cdebug << toString(addr) << toString(uuid) << toString((h256)i[2]) << (string)i[3];
 			}
 			if (saveRequired)
 				m_store.save();
 
 			for (auto const& i: s[2])
-				m_passwordHint[h256(i[0])] = string(i[1]);
-			m_defaultPasswordDeprecated = string(s[3]);
+                m_passwordHint[h256(i[0])] = std::string(i[1]);
+            m_defaultPasswordDeprecated = std::string(s[3]);
 		}
 //		cdebug << hashPassword(m_password) << toHex(m_password);
 		cachePassword(m_defaultPasswordDeprecated);
@@ -113,12 +115,14 @@ bool KeyManager::load(string const& _pass)
 	}
 }
 
-Secret KeyManager::secret(Address const& _address, function<string()> const& _pass, bool _usePasswordCache) const
+Secret KeyManager::secret(Address const& _address, std::function<std::string()> const& _pass,
+    bool _usePasswordCache) const
 {
 	return secret(m_addrLookup.at(_address), _pass, _usePasswordCache);
 }
 
-Secret KeyManager::secret(h128 const& _uuid, function<string()> const& _pass, bool _usePasswordCache) const
+Secret KeyManager::secret(
+    h128 const& _uuid, std::function<std::string()> const& _pass, bool _usePasswordCache) const
 {
 	if (_usePasswordCache)
 		return Secret(m_store.secret(_uuid, [&](){ return getPassword(_uuid, _pass); }, _usePasswordCache));
@@ -126,7 +130,8 @@ Secret KeyManager::secret(h128 const& _uuid, function<string()> const& _pass, bo
 		return Secret(m_store.secret(_uuid, _pass, _usePasswordCache));
 }
 
-string KeyManager::getPassword(h128 const& _uuid, function<string()> const& _pass) const
+std::string KeyManager::getPassword(
+    h128 const& _uuid, std::function<std::string()> const& _pass) const
 {
 	h256 ph;
 	auto ait = m_uuidLookup.find(_uuid);
@@ -139,14 +144,15 @@ string KeyManager::getPassword(h128 const& _uuid, function<string()> const& _pas
 	return getPassword(ph, _pass);
 }
 
-string KeyManager::getPassword(h256 const& _passHash, function<string()> const& _pass) const
+std::string KeyManager::getPassword(
+    h256 const& _passHash, std::function<std::string()> const& _pass) const
 {
 	auto it = m_cachedPasswords.find(_passHash);
 	if (it != m_cachedPasswords.end())
 		return it->second;
 	for (unsigned i = 0; i < 10; ++i)
 	{
-		string p = _pass();
+        std::string p = _pass();
 		if (p.empty())
 			break;
 		if (_passHash == UnknownPassword || hashPassword(p) == _passHash)
@@ -155,7 +161,7 @@ string KeyManager::getPassword(h256 const& _passHash, function<string()> const& 
 			return p;
 		}
 	}
-	return string();
+    return std::string();
 }
 
 h128 KeyManager::uuid(Address const& _a) const
@@ -174,7 +180,8 @@ Address KeyManager::address(h128 const& _uuid) const
 	return it->second;
 }
 
-h128 KeyManager::import(Secret const& _s, string const& _accountName, string const& _pass, string const& _passwordHint)
+h128 KeyManager::import(Secret const& _s, std::string const& _accountName, std::string const& _pass,
+    std::string const& _passwordHint)
 {
 	Address addr = KeyPair(_s).address();
 	auto passHash = hashPassword(_pass);
@@ -188,7 +195,9 @@ h128 KeyManager::import(Secret const& _s, string const& _accountName, string con
 	return uuid;
 }
 
-void KeyManager::importExisting(h128 const& _uuid, string const& _info, string const& _pass, string const& _passwordHint)
+void KeyManager::importExisting(h128 const& _uuid, std::string const& _info,
+    std::string const& _pass,
+    std::string const& _passwordHint)
 {
 	bytesSec key = m_store.secret(_uuid, [&](){ return _pass; });
 	if (key.empty())
@@ -200,7 +209,8 @@ void KeyManager::importExisting(h128 const& _uuid, string const& _info, string c
 	importExisting(_uuid, _info, a, passHash, _passwordHint);
 }
 
-void KeyManager::importExisting(h128 const& _uuid, string const& _accountName, Address const& _address, h256 const& _passHash, string const& _passwordHint)
+void KeyManager::importExisting(h128 const& _uuid, std::string const& _accountName,
+    Address const& _address, h256 const& _passHash, std::string const& _passwordHint)
 {
 	if (!m_passwordHint.count(_passHash))
 		m_passwordHint[_passHash] = _passwordHint;
@@ -221,12 +231,13 @@ void KeyManager::kill(Address const& _a)
 	write(m_keysFile);
 }
 
-KeyPair KeyManager::presaleSecret(std::string const& _json, function<string(bool)> const& _password)
+KeyPair KeyManager::presaleSecret(
+    std::string const& _json, std::function<std::string(bool)> const& _password)
 {
 	js::mValue val;
 	json_spirit::read_string(_json, val);
 	auto obj = val.get_obj();
-	string p = _password(true);
+    std::string p = _password(true);
 	if (obj["encseed"].type() == js::str_type)
 	{
 		auto encseed = fromHex(obj["encseed"].get_str());
@@ -253,7 +264,7 @@ KeyPair KeyManager::presaleSecret(std::string const& _json, function<string(bool
 
 Addresses KeyManager::accounts() const
 {
-	set<Address> addresses;
+    std::set<Address> addresses;
 	for (auto const& i: m_keyInfo)
 		addresses.insert(i.first);
 	for (auto const& key: m_store.keys())
@@ -274,7 +285,7 @@ bool KeyManager::hasAccount(Address const& _address) const
 	return false;
 }
 
-string const& KeyManager::accountName(Address const& _address) const
+std::string const& KeyManager::accountName(Address const& _address) const
 {
 	try
 	{
@@ -286,7 +297,7 @@ string const& KeyManager::accountName(Address const& _address) const
 	}
 }
 
-string const& KeyManager::passwordHint(Address const& _address) const
+std::string const& KeyManager::passwordHint(Address const& _address) const
 {
 	try
 	{
@@ -301,13 +312,13 @@ string const& KeyManager::passwordHint(Address const& _address) const
 	}
 }
 
-h256 KeyManager::hashPassword(string const& _pass) const
+h256 KeyManager::hashPassword(std::string const& _pass) const
 {
 	// TODO SECURITY: store this a bit more securely; Scrypt perhaps?
 	return h256(pbkdf2(_pass, asBytes(m_defaultPasswordDeprecated), 262144, 32).makeInsecure());
 }
 
-void KeyManager::cachePassword(string const& _password) const
+void KeyManager::cachePassword(std::string const& _password) const
 {
 	m_cachedPasswords[hashPassword(_password)] = _password;
 }
@@ -320,7 +331,7 @@ bool KeyManager::write(fs::path const& _keysFile) const
 	return true;
 }
 
-void KeyManager::write(string const& _pass, fs::path const& _keysFile) const
+void KeyManager::write(std::string const& _pass, fs::path const& _keysFile) const
 {
 	bytes salt = h256::random().asBytes();
 	writeFile(appendToFilename(_keysFile, ".salt"), salt, true);
@@ -382,7 +393,7 @@ KeyPair KeyManager::newKeyPair(KeyManager::NewKeyType _type)
 		keepGoing = false;
 	};
 
-	vector<std::thread*> ts;
+	std::vector<std::thread*> ts;
 	for (unsigned t = 0; t < std::thread::hardware_concurrency() - 1; ++t)
 		ts.push_back(new std::thread(f));
 	f();

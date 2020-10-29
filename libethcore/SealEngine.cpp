@@ -6,7 +6,6 @@
 #include "TransactionBase.h"
 #include <libethcore/CommonJS.h>
 
-using namespace std;
 namespace dev
 {
 namespace eth
@@ -149,7 +148,7 @@ void SealEngineFace::verifyTransaction(ImportRequirements::value _ir, Transactio
     if (_gasUsed + (bigint)_t.gas() > _header.gasLimit())
         BOOST_THROW_EXCEPTION(BlockGasLimitReached() << RequirementErrorComment(
                                   (bigint)(_header.gasLimit() - _gasUsed), (bigint)_t.gas(),
-                                  string("_gasUsed + (bigint)_t.gas() > _header.gasLimit()")));
+                                  std::string("_gasUsed + (bigint)_t.gas() > _header.gasLimit()")));
 }
 
 SealEngineFace* SealEngineRegistrar::create(ChainOperationParams const& _params)
@@ -194,8 +193,9 @@ u256 calculateEthashDifficulty(
         bigint const timestampDiff = bigint(_bi.timestamp()) - _parent.timestamp();
         bigint const adjFactor =
             _bi.number() < _chainParams.byzantiumForkBlock ?
-                max<bigint>(1 - timestampDiff / 10, -99) :  // Homestead-era difficulty adjustment
-                max<bigint>((_parent.hasUncles() ? 2 : 1) - timestampDiff / 9,
+                                     std::max<bigint>(1 - timestampDiff / 10,
+                                         -99) :  // Homestead-era difficulty adjustment
+                std::max<bigint>((_parent.hasUncles() ? 2 : 1) - timestampDiff / 9,
                     -99);  // Byzantium-era difficulty adjustment
 
         target = _parent.difficulty() + _parent.difficulty() / 2048 * adjFactor;
@@ -234,8 +234,8 @@ u256 calculateEthashDifficulty(
         o += (bigint(1) << (periodCount - 2));  // latter will eventually become huge, so ensure
                                                 // it's a bigint.
 
-    o = max<bigint>(minimumDifficulty, o);
-    return u256(min<bigint>(o, std::numeric_limits<u256>::max()));
+    o = std::max<bigint>(minimumDifficulty, o);
+    return u256(std::min<bigint>(o, std::numeric_limits<u256>::max()));
 }
 
 u256 calculateGasLimit(
@@ -245,9 +245,9 @@ u256 calculateGasLimit(
     u256 gasLimit = _bi.gasLimit();
     u256 boundDivisor = _chainParams.gasLimitBoundDivisor;
     if (gasLimit < gasFloorTarget)
-        return min<u256>(gasFloorTarget, gasLimit + gasLimit / boundDivisor - 1);
+        return std::min<u256>(gasFloorTarget, gasLimit + gasLimit / boundDivisor - 1);
     else
-        return max<u256>(gasFloorTarget,
+        return std::max<u256>(gasFloorTarget,
             gasLimit - gasLimit / boundDivisor + 1 + (_bi.gasUsed() * 6 / 5) / boundDivisor);
 }
 }

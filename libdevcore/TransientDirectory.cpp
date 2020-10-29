@@ -9,7 +9,6 @@
 #include "TransientDirectory.h"
 #include "CommonIO.h"
 #include "Log.h"
-using namespace std;
 using namespace dev;
 namespace fs = boost::filesystem;
 
@@ -40,7 +39,7 @@ TransientDirectory::~TransientDirectory()
 	// As a consequence, directory is locked and can not be deleted immediately.
 	// Retry after 10 milliseconds usually is successful.
 	// This will help our tests run smoothly in such environment.
-	this_thread::sleep_for(chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
 	ec.clear();
 	fs::remove_all(m_path, ec);

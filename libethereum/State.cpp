@@ -15,7 +15,6 @@
 #include <libevm/VMFactory.h>
 #include <boost/filesystem.hpp>
 
-using namespace std;
 using namespace dev;
 using namespace dev::eth;
 namespace fs = boost::filesystem;
@@ -169,7 +168,7 @@ Account* State::account(Address const& _addr)
         return nullptr;
 
     // Populate basic info.
-    string stateBack = m_state.at(_addr);
+    std::string stateBack = m_state.at(_addr);
     if (stateBack.empty())
     {
         m_nonExistingAccountsCache.insert(_addr);
@@ -186,8 +185,8 @@ Account* State::account(Address const& _addr)
     // version is 0 if absent from RLP
     auto const version = state[4] ? state[4].toInt<u256>() : 0;
 
-    auto i = m_cache.emplace(piecewise_construct, forward_as_tuple(_addr),
-        forward_as_tuple(nonce, balance, storageRoot, codeHash, version, Account::Unchanged));
+    auto i = m_cache.emplace(std::piecewise_construct, std::forward_as_tuple(_addr),
+        std::forward_as_tuple(nonce, balance, storageRoot, codeHash, version, Account::Unchanged));
     m_unchangedCacheEntries.push_back(_addr);
     return &i.first->second;
 }
@@ -202,7 +201,7 @@ void State::clearCacheIfTooLarge() const
         size_t const randomIndex = std::uniform_int_distribution<size_t>(0, m_unchangedCacheEntries.size() - 1)(dev::s_fixedHashEngine);
 
         Address const addr = m_unchangedCacheEntries[randomIndex];
-        swap(m_unchangedCacheEntries[randomIndex], m_unchangedCacheEntries.back());
+        std::swap(m_unchangedCacheEntries[randomIndex], m_unchangedCacheEntries.back());
         m_unchangedCacheEntries.pop_back();
 
         auto cacheEntry = m_cache.find(addr);
@@ -221,7 +220,7 @@ void State::commit(CommitBehaviour _commitBehaviour)
     m_unchangedCacheEntries.clear();
 }
 
-unordered_map<Address, u256> State::addresses() const
+std::unordered_map<Address, u256> State::addresses() const
 {
 #if ETH_FATDB
     unordered_map<Address, u256> ret;
@@ -464,7 +463,7 @@ void State::clearStorage(Address const& _contract)
     m_cache[_contract].clearStorage();
 }
 
-map<h256, pair<u256, u256>> State::storage(Address const& _id) const
+std::map<h256, std::pair<u256, u256>> State::storage(Address const& _id) const
 {
 #if ETH_FATDB
     map<h256, pair<u256, u256>> ret;
@@ -505,7 +504,7 @@ map<h256, pair<u256, u256>> State::storage(Address const& _id) const
 
 h256 State::storageRoot(Address const& _id) const
 {
-    string s = m_state.at(_id);
+    std::string s = m_state.at(_id);
     if (s.size())
     {
         RLP r(s);
@@ -655,7 +654,7 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
     TransactionReceipt const receipt = _envInfo.number() >= _sealEngine.chainParams().byzantiumForkBlock ?
         TransactionReceipt(statusCode, startGasUsed + e.gasUsed(), e.logs()) :
         TransactionReceipt(rootHash(), startGasUsed + e.gasUsed(), e.logs());
-    return make_pair(res, receipt);
+    return std::make_pair(res, receipt);
 }
 
 void State::executeBlockTransactions(Block const& _block, unsigned _txCount,
@@ -708,7 +707,7 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)
     {
         auto it = _s.m_cache.find(i);
         Account* cache = it != _s.m_cache.end() ? &it->second : nullptr;
-        string rlpString = dtr.count(i) ? trie.at(i) : "";
+        std::string rlpString = dtr.count(i) ? trie.at(i) : "";
         RLP r(rlpString);
         assert(cache || r);
 
@@ -716,11 +715,11 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)
             _out << "XXX  " << i << std::endl;
         else
         {
-            string lead = (cache ? r ? " *   " : " +   " : "     ");
+            std::string lead = (cache ? r ? " *   " : " +   " : "     ");
             if (cache && r && cache->nonce() == r[0].toInt<u256>() && cache->balance() == r[1].toInt<u256>())
                 lead = " .   ";
 
-            stringstream contout;
+            std::stringstream contout;
 
             if ((cache && cache->codeHash() == EmptySHA3) || (!cache && r && (h256)r[3] != EmptySHA3))
             {
@@ -757,9 +756,16 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)
 
                 for (auto const& j: mem)
                     if (j.second)
-                        contout << std::endl << (delta.count(j.first) ? back.count(j.first) ? " *     " : " +     " : cached.count(j.first) ? " .     " : "       ") << std::hex << nouppercase << std::setw(64) << j.first << ": " << std::setw(0) << j.second ;
+                        contout << std::endl
+                                << (delta.count(j.first) ?
+                                           back.count(j.first) ? " *     " : " +     " :
+                                           cached.count(j.first) ? " .     " : "       ")
+                                << std::hex << std::nouppercase << std::setw(64) << j.first << ": "
+                                << std::setw(0) << j.second;
                     else
-                        contout << std::endl << "XXX    " << std::hex << nouppercase << std::setw(64) << j.first << "";
+                        contout << std::endl
+                                << "XXX    " << std::hex << std::nouppercase << std::setw(64)
+                                << j.first << "";
             }
             else
                 contout << " [SIMPLE]";

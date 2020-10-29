@@ -16,7 +16,6 @@
 #include <memory>
 #include <thread>
 
-using namespace std;
 using namespace dev;
 using namespace dev::eth;
 using namespace p2p;
@@ -66,7 +65,7 @@ Client::Client(ChainParams const& _params, int _networkID, p2p::Host& _host,
             std::cerr << "REVISING BLOCKCHAIN: Processed " << d << " of " << t << "...\r";
         }),
     m_tq(_l),
-    m_gp(_gpForAdoption ? _gpForAdoption : make_shared<TrivialGasPricer>()),
+    m_gp(_gpForAdoption ? _gpForAdoption : std::make_shared<TrivialGasPricer>()),
     m_preSeal(chainParams().accountStartNonce),
     m_postSeal(chainParams().accountStartNonce),
     m_working(chainParams().accountStartNonce)
@@ -96,7 +95,7 @@ void Client::init(p2p::Host& _extNet, fs::path const& _dbPath,
 
     m_bq.setChain(bc());
 
-    m_lastGetWork = std::chrono::system_clock::now() - chrono::seconds(30);
+    m_lastGetWork = std::chrono::system_clock::now() - std::chrono::seconds(30);
     m_tqReady = m_tq.onReady([=]() {
         this->onTransactionQueueReady();
     });  // TODO: should read m_tq->onReady(thisThread, syncTransactionQueue);
@@ -119,7 +118,7 @@ void Client::init(p2p::Host& _extNet, fs::path const& _dbPath,
     // create Ethereum capability only if we're not downloading the snapshot
     if (_snapshotDownloadPath.empty())
     {
-        auto ethCapability = make_shared<EthereumCapability>(
+        auto ethCapability = std::make_shared<EthereumCapability>(
             _extNet.capabilityHost(), bc(), m_stateDB, m_tq, m_bq, _networkId);
         _extNet.registerCapability(ethCapability);
         m_host = ethCapability;
@@ -132,7 +131,7 @@ void Client::init(p2p::Host& _extNet, fs::path const& _dbPath,
     {
         std::shared_ptr<SnapshotStorageFace> snapshotStorage(
             importedSnapshotExists ? createSnapshotStorage(importedSnapshot) : nullptr);
-        auto warpCapability = make_shared<WarpCapability>(
+        auto warpCapability = std::make_shared<WarpCapability>(
             _extNet.capabilityHost(), bc(), _networkId, _snapshotDownloadPath, snapshotStorage);
         _extNet.registerCapability(warpCapability);
         m_warpHost = warpCapability;
@@ -144,11 +143,11 @@ void Client::init(p2p::Host& _extNet, fs::path const& _dbPath,
 ImportResult Client::queueBlock(bytes const& _block, bool _isSafe)
 {
     if (m_bq.status().verified + m_bq.status().verifying + m_bq.status().unverified > 10000)
-        this_thread::sleep_for(std::chrono::milliseconds(500));
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     return m_bq.import(&_block, _isSafe);
 }
 
-tuple<ImportRoute, bool, unsigned> Client::syncQueue(unsigned _max)
+std::tuple<ImportRoute, bool, unsigned> Client::syncQueue(unsigned _max)
 {
     stopWorking();
     return bc().sync(m_bq, m_stateDB, _max);
@@ -172,7 +171,7 @@ void Client::callQueuedFunctions()
 {
     while (true)
     {
-        function<void()> f;
+        std::function<void()> f;
         DEV_WRITE_GUARDED(x_functionQueue)
             if (!m_functionQueue.empty())
             {
@@ -295,7 +294,7 @@ void Client::reopenChain(ChainParams const& _p, WithExisting _we)
         startSealing();
 }
 
-void Client::executeInMainThread(function<void ()> const& _function)
+void Client::executeInMainThread(std::function<void()> const& _function)
 {
     DEV_WRITE_GUARDED(x_functionQueue)
         m_functionQueue.push(_function);
@@ -323,7 +322,7 @@ void Client::appendFromNewPending(TransactionReceipt const& _receipt, h256Hash& 
     Guard l(x_filtersWatches);
     io_changed.insert(PendingChangedFilter);
     m_specialFilters.at(PendingChangedFilter).push_back(_sha3);
-    for (pair<h256 const, InstalledFilter>& i: m_filters)
+    for (std::pair<h256 const, InstalledFilter>& i : m_filters)
     {
         // acceptable number.
         auto m = i.second.filter.matches(_receipt);
@@ -345,7 +344,7 @@ void Client::appendFromBlock(h256 const& _block, BlockPolarity _polarity, h256Ha
     Guard l(x_filtersWatches);
     io_changed.insert(ChainChangedFilter);
     m_specialFilters.at(ChainChangedFilter).push_back(_block);
-    for (pair<h256 const, InstalledFilter>& i: m_filters)
+    for (std::pair<h256 const, InstalledFilter>& i : m_filters)
     {
         // acceptable number & looks like block may contain a matching log entry.
         for (size_t j = 0; j < receipts.size(); j++)
@@ -396,9 +395,9 @@ void Client::syncBlockQueue()
     }
 
     if (elapsed > c_targetDurationS * 1.1 && count > c_syncMinBlockCount)
-        m_syncAmount = max(c_syncMinBlockCount, count * 9 / 10);
+        m_syncAmount = std::max(c_syncMinBlockCount, count * 9 / 10);
     else if (count == m_syncAmount && elapsed < c_targetDurationS * 0.9 && m_syncAmount < c_syncMaxBlockCount)
-        m_syncAmount = min(c_syncMaxBlockCount, m_syncAmount * 11 / 10 + 1);
+        m_syncAmount = std::min(c_syncMaxBlockCount, m_syncAmount * 11 / 10 + 1);
     if (ir.liveBlocks.empty())
         return;
     onChainChanged(ir);
@@ -554,7 +553,7 @@ void Client::onChainChanged(ImportRoute const& _ir)
 //  ctrace << "onChainChanged()";
     h256Hash changeds;
     onDeadBlocks(_ir.deadBlocks, changeds);
-    vector<h256> goodTransactions;
+    std::vector<h256> goodTransactions;
     goodTransactions.reserve(_ir.goodTransactions.size());
     for (auto const& t: _ir.goodTransactions)
     {
@@ -574,7 +573,7 @@ void Client::onChainChanged(ImportRoute const& _ir)
 
 bool Client::remoteActive() const
 {
-    return chrono::system_clock::now() - m_lastGetWork < chrono::seconds(30);
+    return std::chrono::system_clock::now() - m_lastGetWork < std::chrono::seconds(30);
 }
 
 void Client::onPostStateChanged()
@@ -709,18 +708,18 @@ void Client::doWork(bool _doWait)
     if (!m_syncBlockQueue && !m_syncTransactionQueue && (_doWait || isSealed) && isWorking())
     {
         std::unique_lock<std::mutex> l(x_signalled);
-        m_signalled.wait_for(l, chrono::seconds(1));
+        m_signalled.wait_for(l, std::chrono::seconds(1));
     }
 }
 
 void Client::tick()
 {
-    if (chrono::system_clock::now() - m_lastTick > chrono::seconds(1))
+    if (std::chrono::system_clock::now() - m_lastTick > std::chrono::seconds(1))
     {
         m_report.ticks++;
         checkWatchGarbage();
         m_bq.tick();
-        m_lastTick = chrono::system_clock::now();
+        m_lastTick = std::chrono::system_clock::now();
         if (m_report.ticks == 15)
             LOG(m_loggerDetail) << activityReport();
     }
@@ -728,19 +727,21 @@ void Client::tick()
 
 void Client::checkWatchGarbage()
 {
-    if (chrono::system_clock::now() - m_lastGarbageCollection > chrono::seconds(5))
+    if (std::chrono::system_clock::now() - m_lastGarbageCollection > std::chrono::seconds(5))
     {
         // watches garbage collection
-        vector<unsigned> toUninstall;
+        std::vector<unsigned> toUninstall;
         DEV_GUARDED(x_filtersWatches)
             for (auto key: keysOf(m_watches))
-                if (m_watches[key].lastPoll != chrono::system_clock::time_point::max() && chrono::system_clock::now() - m_watches[key].lastPoll > chrono::seconds(20))
+            if (m_watches[key].lastPoll != std::chrono::system_clock::time_point::max() &&
+                    std::chrono::system_clock::now() - m_watches[key].lastPoll >
+                        std::chrono::seconds(20))
                 {
                     toUninstall.push_back(key);
                     LOG(m_loggerDetail)
                         << "GC: Uninstall " << key << " ("
-                        << chrono::duration_cast<chrono::seconds>(
-                               chrono::system_clock::now() - m_watches[key].lastPoll)
+                        << std::chrono::duration_cast<std::chrono::seconds>(
+                               std::chrono::system_clock::now() - m_watches[key].lastPoll)
                                .count()
                         << " s old)";
                 }
@@ -750,7 +751,7 @@ void Client::checkWatchGarbage()
         // blockchain GC
         bc().garbageCollect();
 
-        m_lastGarbageCollection = chrono::system_clock::now();
+        m_lastGarbageCollection = std::chrono::system_clock::now();
     }
 }
 
@@ -804,7 +805,7 @@ TransactionSkeleton Client::populateTransactionWithDefaults(TransactionSkeleton 
     // value used by geth and testrpc.
     const u256 defaultTransactionGas = 90000;
     if (ret.nonce == Invalid256)
-        ret.nonce = max<u256>(postSeal().transactionsFrom(ret.from), m_tq.maxNonce(ret.from));
+        ret.nonce = std::max<u256>(postSeal().transactionsFrom(ret.from), m_tq.maxNonce(ret.from));
     if (ret.gasPrice == Invalid256)
         ret.gasPrice = gasBidPrice();
     if (ret.gas == Invalid256)
@@ -846,7 +847,7 @@ void Client::rewind(unsigned _n)
             n = m_working.info().number();
         if (n == _n + 1)
             break;
-        this_thread::sleep_for(std::chrono::milliseconds(50));
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
     auto h = m_host.lock();
     if (h)
@@ -915,7 +916,7 @@ ExecutionResult Client::call(Address const& _from, u256 _value, Address _dest, b
     try
     {
         Block temp = blockByNumber(_blockNumber);
-        u256 nonce = max<u256>(temp.transactionsFrom(_from), m_tq.maxNonce(_from));
+        u256 nonce = std::max<u256>(temp.transactionsFrom(_from), m_tq.maxNonce(_from));
         u256 gas = _gas == Invalid256 ? gasLimitRemaining() : _gas;
         u256 gasPrice = _gasPrice == Invalid256 ? gasBidPrice() : _gasPrice;
         Transaction t(_value, gasPrice, gas, _dest, _data, nonce);
@@ -937,7 +938,7 @@ std::tuple<h256, h256, h256> Client::getWork()
     // this will be reset as soon as a new block arrives, allowing more transactions to be
     // processed.
     bool oldShould = shouldServeWork();
-    m_lastGetWork = chrono::system_clock::now();
+    m_lastGetWork = std::chrono::system_clock::now();
     if (!sealEngine()->shouldSeal(this))
         return std::tuple<h256, h256, h256>();
 

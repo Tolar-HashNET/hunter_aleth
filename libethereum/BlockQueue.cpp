@@ -11,7 +11,6 @@
 #include "BlockChain.h"
 #include "VerifiedBlock.h"
 #include "State.h"
-using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
@@ -23,7 +22,7 @@ constexpr size_t c_maxUnknownSize = 512 * 1024 * 1024;  // Block size can be ~50
 BlockQueue::BlockQueue()
 {
     // Allow some room for other activity
-    unsigned verifierThreads = std::max(thread::hardware_concurrency(), 3U) - 2U;
+    unsigned verifierThreads = std::max(std::thread::hardware_concurrency(), 3U) - 2U;
     for (unsigned i = 0; i < verifierThreads; ++i)
         m_verifiers.emplace_back([=](){
             setThreadName("verifier" + toString(i));
@@ -72,7 +71,7 @@ void BlockQueue::verifierBody()
         UnverifiedBlock work;
 
         {
-            unique_lock<Mutex> l(m_verification);
+            std::unique_lock<Mutex> l(m_verification);
             m_moreToVerify.wait(l, [&](){ return !m_unverified.isEmpty() || m_deleting; });
             if (m_deleting)
                 return;
@@ -81,7 +80,7 @@ void BlockQueue::verifierBody()
             BlockHeader bi;
             bi.setSha3Uncles(work.hash);
             bi.setParentHash(work.parentHash);
-            m_verifying.enqueue(move(bi));
+            m_verifying.enqueue(std::move(bi));
         }
 
         VerifiedBlock res;
@@ -95,7 +94,7 @@ void BlockQueue::verifierBody()
             // bad block.
             // has to be this order as that's how invariants() assumes.
             WriteGuard l2(m_lock);
-            unique_lock<Mutex> l(m_verification);
+            std::unique_lock<Mutex> l(m_verification);
             m_readySet.erase(work.hash);
             m_knownBad.insert(work.hash);
             if (!m_verifying.remove(work.hash))
@@ -107,7 +106,7 @@ void BlockQueue::verifierBody()
         bool ready = false;
         {
             WriteGuard l2(m_lock);
-            unique_lock<Mutex> l(m_verification);
+            std::unique_lock<Mutex> l(m_verification);
             if (!m_verifying.isEmpty() && m_verifying.nextHash() == work.hash)
             {
                 // we're next!
@@ -118,14 +117,14 @@ void BlockQueue::verifierBody()
                     m_knownBad.insert(res.verified.info.hash());
                 }
                 else
-                    m_verified.enqueue(move(res));
+                    m_verified.enqueue(std::move(res));
 
                 drainVerified_WITH_BOTH_LOCKS();
                 ready = true;
             }
             else
             {
-                if (!m_verifying.replace(work.hash, move(res)))
+                if (!m_verifying.replace(work.hash, std::move(res)))
                     cwarn << "BlockQueue missing our job: was there a GM?";
             }
         }
@@ -145,7 +144,7 @@ void BlockQueue::drainVerified_WITH_BOTH_LOCKS()
             m_knownBad.insert(block.verified.info.hash());
         }
         else
-            m_verified.enqueue(move(block));
+            m_verified.enqueue(std::move(block));
     }
 }
 
@@ -298,10 +297,11 @@ void BlockQueue::updateBad_WITH_LOCK(h256 const& _bad)
 
 void BlockQueue::collectUnknownBad_WITH_BOTH_LOCKS(h256 const& _bad)
 {
-    list<h256> badQueue(1, _bad);
+    std::list<h256> badQueue(1, _bad);
     while (!badQueue.empty())
     {
-        vector<pair<h256, bytes>> const removed = m_unknown.removeByKeyEqual(badQueue.front());
+        std::vector<std::pair<h256, bytes>> const removed =
+            m_unknown.removeByKeyEqual(badQueue.front());
         badQueue.pop_front();
         for (auto& newBad: removed)
         {
@@ -331,7 +331,7 @@ bool BlockQueue::doneDrain(h256s const& _bad)
 
 void BlockQueue::tick()
 {
-    vector<pair<h256, bytes>> todo;
+    std::vector<std::pair<h256, bytes>> todo;
     {
         UpgradableGuard l(m_lock);
         if (m_future.isEmpty())
@@ -423,7 +423,7 @@ void BlockQueue::drain(VerifiedBlocks& o_out, unsigned _max)
         {
             m_drainingDifficulty = 0;
             DEV_GUARDED(m_verification)
-                o_out = m_verified.dequeueMultiple(min<unsigned>(_max, m_verified.count()));
+            o_out = m_verified.dequeueMultiple(std::min<unsigned>(_max, m_verified.count()));
 
             for (auto const& bs: o_out)
             {
@@ -453,12 +453,12 @@ bool BlockQueue::invariants() const
 void BlockQueue::noteReady_WITH_LOCK(h256 const& _good)
 {
     DEV_INVARIANT_CHECK;
-    list<h256> goodQueue(1, _good);
+    std::list<h256> goodQueue(1, _good);
     bool notify = false;
     while (!goodQueue.empty())
     {
         h256 const parent = goodQueue.front();
-        vector<pair<h256, bytes>> const removed = m_unknown.removeByKeyEqual(parent);
+        std::vector<std::pair<h256, bytes>> const removed = m_unknown.removeByKeyEqual(parent);
         goodQueue.pop_front();
         for (auto& newReady: removed)
         {
@@ -481,11 +481,12 @@ void BlockQueue::retryAllUnknown()
     while (!m_unknown.isEmpty())
     {
         h256 parent = m_unknown.firstKey();
-        vector<pair<h256, bytes>> removed = m_unknown.removeByKeyEqual(parent);
+        std::vector<std::pair<h256, bytes>> removed = m_unknown.removeByKeyEqual(parent);
         for (auto& newReady: removed)
         {
             DEV_GUARDED(m_verification)
-                m_unverified.enqueue(UnverifiedBlock{ newReady.first, parent, move(newReady.second) });
+            m_unverified.enqueue(
+                UnverifiedBlock{newReady.first, parent, std::move(newReady.second)});
             m_unknownSet.erase(newReady.first);
             m_readySet.insert(newReady.first);
             m_moreToVerify.notify_one();
@@ -497,13 +498,13 @@ void BlockQueue::retryAllUnknown()
 boost::log::formatting_ostream& dev::eth::operator<<(
     boost::log::formatting_ostream& _out, BlockQueueStatus const& _bqs)
 {
-    _out << "importing: " << _bqs.importing << endl;
-    _out << "verified: " << _bqs.verified << endl;
-    _out << "verifying: " << _bqs.verifying << endl;
-    _out << "unverified: " << _bqs.unverified << endl;
-    _out << "future: " << _bqs.future << endl;
-    _out << "unknown: " << _bqs.unknown << endl;
-    _out << "bad: " << _bqs.bad << endl;
+    _out << "importing: " << _bqs.importing << std::endl;
+    _out << "verified: " << _bqs.verified << std::endl;
+    _out << "verifying: " << _bqs.verifying << std::endl;
+    _out << "unverified: " << _bqs.unverified << std::endl;
+    _out << "future: " << _bqs.future << std::endl;
+    _out << "unknown: " << _bqs.unknown << std::endl;
+    _out << "bad: " << _bqs.bad << std::endl;
 
     return _out;
 }

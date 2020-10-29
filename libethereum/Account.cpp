@@ -10,7 +10,6 @@
 #include <libdevcore/OverlayDB.h>
 #include <libethcore/ChainOperationParams.h>
 
-using namespace std;
 using namespace dev;
 using namespace dev::eth;
 using namespace dev::eth::validation;
@@ -105,13 +104,13 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _def
                 {
                     auto& codeStr = codeObj.get_str();
                     if (codeStr.find("0x") != 0 && !codeStr.empty())
-                        cerr << "Error importing code of account " << a
+                        std::cerr << "Error importing code of account " << a
                              << "! Code needs to be hex bytecode prefixed by \"0x\".";
                     else
                         ret[a].setCode(fromHex(codeStr), 0);
                 }
                 else
-                    cerr << "Error importing code of account " << a
+                    std::cerr << "Error importing code of account " << a
                          << "! Code field needs to be a string";
             }
 
@@ -126,17 +125,18 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _def
                         codePath = _configPath.parent_path() / codePath;
                     bytes code = contents(codePath);
                     if (code.empty())
-                        cerr << "Error importing code of account " << a << "! Code file "
+                        std::cerr << "Error importing code of account " << a << "! Code file "
                              << codePath << " empty or does not exist.\n";
                     ret[a].setCode(std::move(code), 0);
                 }
                 else
-                    cerr << "Error importing code of account " << a
+                    std::cerr << "Error importing code of account " << a
                          << "! Code file path must be a string\n";
             }
 
             if (haveStorage)
-                for (pair<string, js::mValue> const& j : accountMaskJson.at(c_storage).get_obj())
+                for (std::pair<std::string, js::mValue> const& j :
+                    accountMaskJson.at(c_storage).get_obj())
                     ret[a].setStorage(u256(j.first), u256(j.second.get_str()));
         }
 

@@ -4,7 +4,6 @@
 #include "StateCacheDB.h"
 #include "Common.h"
 #include "CommonData.h"
-using namespace std;
 using namespace dev;
 
 namespace dev

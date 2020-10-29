@@ -12,7 +12,6 @@
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/Log.h>
 
-using namespace std;
 using namespace dev;
 using namespace dev::crypto;
 
@@ -114,7 +113,7 @@ libff::alt_bn128_G2 decodePointG2(dev::bytesConstRef _data)
 
 }
 
-pair<bool, bytes> dev::crypto::alt_bn128_pairing_product(dev::bytesConstRef _in)
+std::pair<bool, bytes> dev::crypto::alt_bn128_pairing_product(dev::bytesConstRef _in)
 {
 	// Input: list of pairs of G1 and G2 points
 	// Output: 1 if pairing evaluates to 1, 0 otherwise (left-padded to 32 bytes)
@@ -154,7 +153,7 @@ pair<bool, bytes> dev::crypto::alt_bn128_pairing_product(dev::bytesConstRef _in)
 	}
 }
 
-pair<bool, bytes> dev::crypto::alt_bn128_G1_add(dev::bytesConstRef _in)
+std::pair<bool, bytes> dev::crypto::alt_bn128_G1_add(dev::bytesConstRef _in)
 {
 	try
 	{
@@ -170,7 +169,7 @@ pair<bool, bytes> dev::crypto::alt_bn128_G1_add(dev::bytesConstRef _in)
 	}
 }
 
-pair<bool, bytes> dev::crypto::alt_bn128_G1_mul(dev::bytesConstRef _in)
+std::pair<bool, bytes> dev::crypto::alt_bn128_G1_mul(dev::bytesConstRef _in)
 {
 	try
 	{

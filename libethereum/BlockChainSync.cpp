@@ -14,13 +14,12 @@
 #include <libp2p/Session.h>
 #include <chrono>
 
-using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
 std::ostream& dev::eth::operator<<(std::ostream& _out, SyncStatus const& _sync)
 {
-    _out << "protocol: " << _sync.protocolVersion << endl;
+    _out << "protocol: " << _sync.protocolVersion << std::endl;
     _out << "state: " << EthereumCapability::stateName(_sync.state) << " ";
     if (_sync.state == SyncState::Blocks)
         _out << _sync.currentBlockNumber << "/" << _sync.highestBlockNumber;
@@ -174,7 +173,7 @@ void BlockChainSync::onBlockImported(BlockHeader const& _info)
     {
         m_lastImportedBlock = static_cast<unsigned>(_info.number());
         m_lastImportedBlockHash = _info.hash();
-        m_highestBlock = max(m_lastImportedBlock, m_highestBlock);
+        m_highestBlock = std::max(m_lastImportedBlock, m_highestBlock);
     }
 }
 
@@ -195,7 +194,7 @@ void BlockChainSync::onPeerStatus(EthereumPeer const& _peer)
         return; // Expired
 
     std::string disconnectReason;
-    if (peerSessionInfo->clientVersion.find("/v0.7.0/") != string::npos)
+    if (peerSessionInfo->clientVersion.find("/v0.7.0/") != std::string::npos)
         disconnectReason = "Blacklisted client version.";
     else
         disconnectReason = _peer.validate(
@@ -306,7 +305,7 @@ void BlockChainSync::requestBlocks(NodeID const& _peerID)
     // check to see if we need to download any block bodies first
     auto header = m_headers.begin();
     h256s neededBodies;
-    vector<unsigned> neededNumbers;
+    std::vector<unsigned> neededNumbers;
     unsigned index = 0;
     if (m_haveCommonHeader && !m_headers.empty() && m_headers.begin()->first == m_lastImportedBlock + 1)
     {
@@ -453,7 +452,7 @@ void BlockChainSync::onPeerBlockHeaders(NodeID const& _peerID, RLP const& _r)
     RecursiveGuard l(x_sync);
     DEV_INVARIANT_CHECK;
     size_t itemCount = _r.itemCount();
-    LOG(m_logger) << "BlocksHeaders (" << dec << itemCount << " entries) "
+    LOG(m_logger) << "BlocksHeaders (" << std::dec << itemCount << " entries) "
                   << (itemCount ? "" : ": NoMoreHeaders") << " from " << _peerID;
 
     if (m_daoChallengedPeers.find(_peerID) != m_daoChallengedPeers.end())
@@ -600,7 +599,7 @@ void BlockChainSync::onPeerBlockBodies(NodeID const& _peerID, RLP const& _r)
     RecursiveGuard l(x_sync);
     DEV_INVARIANT_CHECK;
     size_t itemCount = _r.itemCount();
-    LOG(m_logger) << "BlocksBodies (" << dec << itemCount << " entries) "
+    LOG(m_logger) << "BlocksBodies (" << std::dec << itemCount << " entries) "
                   << (itemCount ? "" : ": NoMoreBodies") << " from " << _peerID;
     clearPeerDownload(_peerID);
     if (m_state != SyncState::Blocks && m_state != SyncState::Waiting) {
@@ -746,7 +745,8 @@ void BlockChainSync::collectBlocks()
 void BlockChainSync::logImported(
     unsigned _success, unsigned _future, unsigned _got, unsigned _unknown)
 {
-    LOG(m_logger) << dec << _success << " imported OK, " << _unknown << " with unknown parents, "
+    LOG(m_logger) << std::dec << _success << " imported OK, " << _unknown
+                  << " with unknown parents, "
                   << _future << " with future timestamps, " << _got << " already known received.";
 }
 
@@ -782,10 +782,10 @@ void BlockChainSync::onPeerNewBlock(NodeID const& _peerID, RLP const& _r)
         logNewBlock(h);
         if (blockNumber > m_lastImportedBlock) 
         {
-            m_lastImportedBlock = max(m_lastImportedBlock, blockNumber);
+            m_lastImportedBlock = std::max(m_lastImportedBlock, blockNumber);
             m_lastImportedBlockHash = h;
         }
-        m_highestBlock = max(m_lastImportedBlock, m_highestBlock);
+        m_highestBlock = std::max(m_lastImportedBlock, m_highestBlock);
         m_downloadingBodies.erase(blockNumber);
         m_downloadingHeaders.erase(blockNumber);
         removeItem(m_headers, blockNumber);
