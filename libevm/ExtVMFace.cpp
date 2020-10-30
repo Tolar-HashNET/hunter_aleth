@@ -175,16 +175,20 @@ evmc::result EvmCHost::create(evmc_message const& _msg) noexcept
         evmcResult.output_size = result.output.size();
 
         // Place a new vector of bytes containing output in result's reserved memory.
-        auto* data = evmc_get_optional_storage(&evmcResult);
-        static_assert(sizeof(bytes) <= sizeof(*data), "Vector is too big");
-        new (data) bytes(result.output.takeBytes());
+        auto data = evmc_get_optional_storage(&evmcResult);
+
+        // NOTE: sizeof(vector) is 32 bytes in Debug VS 2019
+        // static_assert(sizeof(bytes) <= sizeof(*data), "Vector is too big");
+        // new (data) bytes(result.output.takeBytes());
+
+        data->pointer = new bytes(result.output.takeBytes());
+
         // Set the destructor to delete the vector.
         evmcResult.release = [](evmc_result const* _result) {
-            auto* data = evmc_get_const_optional_storage(_result);
-            auto& output = reinterpret_cast<bytes const&>(*data);
-            // Explicitly call vector's destructor to release its data.
-            // This is normal pattern when placement new operator is used.
-            output.~bytes();
+            auto data = evmc_get_const_optional_storage(_result);
+
+            bytes* b = static_cast<bytes*>(data->pointer);
+            delete b;
         };
     }
     return evmc::result{evmcResult};
@@ -224,16 +228,20 @@ evmc::result EvmCHost::call(evmc_message const& _msg) noexcept
     evmcResult.output_size = result.output.size();
 
     // Place a new vector of bytes containing output in result's reserved memory.
-    auto* data = evmc_get_optional_storage(&evmcResult);
-    static_assert(sizeof(bytes) <= sizeof(*data), "Vector is too big");
-    new (data) bytes(result.output.takeBytes());
+    auto data = evmc_get_optional_storage(&evmcResult);
+
+    // NOTE: sizeof(vector) is 32 bytes in Debug VS 2019
+    // static_assert(sizeof(bytes) <= sizeof(*data), "Vector is too big");
+    // new (data) bytes(result.output.takeBytes());
+
+    data->pointer = new bytes(result.output.takeBytes());
+
     // Set the destructor to delete the vector.
     evmcResult.release = [](evmc_result const* _result) {
-        auto* data = evmc_get_const_optional_storage(_result);
-        auto& output = reinterpret_cast<bytes const&>(*data);
-        // Explicitly call vector's destructor to release its data.
-        // This is normal pattern when placement new operator is used.
-        output.~bytes();
+        auto data = evmc_get_const_optional_storage(_result);
+
+        bytes* b = static_cast<bytes*>(data->pointer);
+        delete b;
     };
     return evmc::result{evmcResult};
 }
