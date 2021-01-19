@@ -7,11 +7,22 @@
 #include <pthread.h>
 #endif
 
+#include <boost/thread/tss.hpp>
+
 namespace dev
 {
 
 namespace
 {
+/// Associate a name with each thread for nice logging.
+struct ThreadLocalLogName
+{
+    ThreadLocalLogName(std::string const& _name) { m_name.reset(new std::string(_name)); }
+    boost::thread_specific_ptr<std::string> m_name;
+};
+
+ThreadLocalLogName g_logThreadName("main");
+
 std::atomic<bool> g_vmTraceEnabled{false};
 }  // namespace
 
