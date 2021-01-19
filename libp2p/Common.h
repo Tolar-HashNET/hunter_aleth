@@ -66,17 +66,13 @@ struct NetworkRestartNotSupported : virtual dev::Exception {};
 /// The ECDHE agreement failed during RLPx handshake.
 struct ECDHEError: virtual Exception {};
 
-#define NET_GLOBAL_LOGGER(NAME, SEVERITY)                      \
-    BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_##NAME##Logger, \
-        boost::log::sources::severity_channel_logger_mt<>,     \
-        (boost::log::keywords::severity = SEVERITY)(boost::log::keywords::channel = "net"))
+inline SpdlogWrapper g_netnoteLogger{VerbosityInfo};
+inline SpdlogWrapper g_netlogLogger{VerbosityDebug};
+inline SpdlogWrapper g_netdetailsLogger{VerbosityTrace};
 
-NET_GLOBAL_LOGGER(netnote, VerbosityInfo)
-#define cnetnote LOG(dev::p2p::g_netnoteLogger::get())
-NET_GLOBAL_LOGGER(netlog, VerbosityDebug)
-#define cnetlog LOG(dev::p2p::g_netlogLogger::get())
-NET_GLOBAL_LOGGER(netdetails, VerbosityTrace)
-#define cnetdetails LOG(dev::p2p::g_netdetailsLogger::get())
+#define cnetnote LOG(dev::p2p::g_netnoteLogger)
+#define cnetlog LOG(dev::p2p::g_netlogLogger)
+#define cnetdetails LOG(dev::p2p::g_netdetailsLogger)
 
 enum P2pPacketType
 {
@@ -257,6 +253,7 @@ public:
     std::atomic<PeerType> peerType{PeerType::Optional};
 };
 
+#if 0
 inline boost::log::formatting_ostream& operator<<(
     boost::log::formatting_ostream& _strm, Node const& _node)
 {
@@ -286,6 +283,7 @@ inline boost::log::formatting_ostream& operator<<(
         _strm << "(" << cap.first << "," << cap.second << ")";
     return _strm;
 }
+#endif
 
 /// Simple stream output for a NodeIPEndpoint.
 std::ostream& operator<<(std::ostream& _out, NodeIPEndpoint const& _ep);

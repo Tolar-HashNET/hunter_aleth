@@ -31,7 +31,9 @@ RLPXHandshake::RLPXHandshake(
     m_socket(_socket),
     m_idleTimer(m_socket->ref().get_executor()),
     m_failureReason{HandshakeFailureReason::NoFailure}
+
 {
+#if 0
     auto const prefixAttr =
         boost::log::attributes::constant<std::string>{connectionDirectionString()};
     m_logger.add_attribute("Prefix", prefixAttr);
@@ -45,6 +47,7 @@ RLPXHandshake::RLPXHandshake(
     auto const suffixAttr = boost::log::attributes::constant<std::string>{remoteInfoStream.str()};
     m_logger.add_attribute("Suffix", suffixAttr);
     m_errorLogger.add_attribute("Suffix", suffixAttr);
+#endif
 
     crypto::Nonce::get().ref().copyTo(m_nonce.ref());
 }

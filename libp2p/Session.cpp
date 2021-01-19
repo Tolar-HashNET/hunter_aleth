@@ -29,6 +29,7 @@ Session::Session(Host* _h, std::unique_ptr<RLPXFrameCoder>&& _io,
 
     m_logSuffix = remoteInfoStream.str();
 
+#if 0
     auto const attr = boost::log::attributes::constant<std::string>{remoteInfoStream.str()};
     m_netLogger.add_attribute("Suffix", attr);
     m_netLoggerDetail.add_attribute("Suffix", attr);
@@ -36,6 +37,7 @@ Session::Session(Host* _h, std::unique_ptr<RLPXFrameCoder>&& _io,
 
     m_capLogger.add_attribute("Suffix", attr);
     m_capLoggerDetail.add_attribute("Suffix", attr);
+#endif
 
     m_peer->m_lastDisconnect = NoDisconnect;
     m_lastReceived = m_connect = std::chrono::steady_clock::now();
@@ -347,8 +349,8 @@ void Session::doRead()
             }
             catch (std::exception const& _e)
             {
-                LOG(m_netLogger) << "Exception decoding frame header RLP: " << _e.what() << " "
-                                 << bytesConstRef(m_data.data(), h128::size).cropped(3);
+                //LOG(m_netLogger) << "Exception decoding frame header RLP: " << _e.what() << " "
+                //                 << bytesConstRef(m_data.data(), h128::size).cropped(3);
                 drop(BadProtocol);
                 return;
             }
@@ -373,7 +375,7 @@ void Session::doRead()
                     if (!checkPacket(frame))
                     {
                         LOG(m_netLogger) << "Received invalid message. Size: " << frame.size()
-                                         << " bytes, message: " << toHex(frame) << std::endl;
+                                         << " bytes, message: " << toHex(frame);
                         disconnect(BadProtocol);
                         return;
                     }

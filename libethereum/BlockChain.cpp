@@ -423,7 +423,7 @@ void BlockChain::rebuild(
         if (!(d % 1000))
         {
             LOG(m_loggerInfo) << "\n1000 blocks in " << t.elapsed()
-                              << "s = " << (1000.0 / t.elapsed()) << "b/s" << std::endl;
+                              << "s = " << (1000.0 / t.elapsed()) << "b/s";
             t.restart();
         }
         try

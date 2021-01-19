@@ -958,7 +958,7 @@ void Host::logActivePeers()
     if (m_netConfig.discovery)
         LOG(m_infoLogger) << "Looking for peers...";
 
-    LOG(m_logger) << "Peers: " << peerSessionInfos();
+    //LOG(m_logger) << "Peers: " << peerSessionInfos();
     m_lastPeerLogMessage = std::chrono::steady_clock::now();
 }
 

@@ -245,8 +245,8 @@ void BlockChainSync::syncPeer(NodeID const& _peerID, bool _force)
     if (isSyncPaused())
     {
         LOG(m_loggerDetail) << "Can't sync with peer " << _peerID
-                            << " - sync state is paused. Block queue status: "
-                            << host().bq().status();
+                            << " - sync state is paused. Block queue status: ";
+                            //<< host().bq().status();
         return;
     }
 
@@ -297,8 +297,8 @@ void BlockChainSync::requestBlocks(NodeID const& _peerID)
     clearPeerDownload(_peerID);
     if (host().bq().knownFull())
     {
-        LOG(m_loggerDetail) << "Waiting for block queue before downloading blocks from " << _peerID
-                            << ". Block queue status: " << host().bq().status();
+        LOG(m_loggerDetail) << "Waiting for block queue before downloading blocks from " << _peerID;
+                            //<< ". Block queue status: " << host().bq().status();
         pauseSync();
         return;
     }
@@ -452,7 +452,7 @@ void BlockChainSync::onPeerBlockHeaders(NodeID const& _peerID, RLP const& _r)
     RecursiveGuard l(x_sync);
     DEV_INVARIANT_CHECK;
     size_t itemCount = _r.itemCount();
-    LOG(m_logger) << "BlocksHeaders (" << std::dec << itemCount << " entries) "
+    LOG(m_logger) << "BlocksHeaders (" << itemCount << " entries) "
                   << (itemCount ? "" : ": NoMoreHeaders") << " from " << _peerID;
 
     if (m_daoChallengedPeers.find(_peerID) != m_daoChallengedPeers.end())
@@ -599,7 +599,7 @@ void BlockChainSync::onPeerBlockBodies(NodeID const& _peerID, RLP const& _r)
     RecursiveGuard l(x_sync);
     DEV_INVARIANT_CHECK;
     size_t itemCount = _r.itemCount();
-    LOG(m_logger) << "BlocksBodies (" << std::dec << itemCount << " entries) "
+    LOG(m_logger) << "BlocksBodies (" << itemCount << " entries) "
                   << (itemCount ? "" : ": NoMoreBodies") << " from " << _peerID;
     clearPeerDownload(_peerID);
     if (m_state != SyncState::Blocks && m_state != SyncState::Waiting) {
@@ -745,7 +745,7 @@ void BlockChainSync::collectBlocks()
 void BlockChainSync::logImported(
     unsigned _success, unsigned _future, unsigned _got, unsigned _unknown)
 {
-    LOG(m_logger) << std::dec << _success << " imported OK, " << _unknown
+    LOG(m_logger) << _success << " imported OK, " << _unknown
                   << " with unknown parents, "
                   << _future << " with future timestamps, " << _got << " already known received.";
 }

@@ -495,20 +495,6 @@ void BlockQueue::retryAllUnknown()
     m_moreToVerify.notify_all();
 }
 
-boost::log::formatting_ostream& dev::eth::operator<<(
-    boost::log::formatting_ostream& _out, BlockQueueStatus const& _bqs)
-{
-    _out << "importing: " << _bqs.importing << std::endl;
-    _out << "verified: " << _bqs.verified << std::endl;
-    _out << "verifying: " << _bqs.verifying << std::endl;
-    _out << "unverified: " << _bqs.unverified << std::endl;
-    _out << "future: " << _bqs.future << std::endl;
-    _out << "unknown: " << _bqs.unknown << std::endl;
-    _out << "bad: " << _bqs.bad << std::endl;
-
-    return _out;
-}
-
 u256 BlockQueue::difficulty() const
 {
     UpgradableGuard l(m_lock);

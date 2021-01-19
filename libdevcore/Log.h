@@ -10,44 +10,22 @@
 #include <string>
 #include <vector>
 
-#include <boost/log/attributes/scoped_attribute.hpp>
-#include <boost/log/sources/global_logger_storage.hpp>
-#include <boost/log/sources/record_ostream.hpp>
-#include <boost/log/sources/severity_channel_logger.hpp>
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
+
+#include <map>
+#include <optional>
 
 namespace dev
 {
-/// Set the current thread's log name.
-///
-/// It appears that there is not currently any cross-platform way of setting
-/// thread names either in Boost or in the C++11 runtime libraries.   What is
-/// more, the API for 'pthread_setname_np' is not even consistent across
-/// platforms which implement it.
-///
-/// A proposal to add such functionality on the Boost mailing list, which
-/// I assume never happened, but which I should follow-up and ask about.
-/// http://boost.2283326.n4.nabble.com/Adding-an-option-to-set-the-name-of-a-boost-thread-td4638283.html
-///
-/// man page for 'pthread_setname_np', including this crucial snippet of
-/// information ... "These functions are nonstandard GNU extensions."
-/// http://man7.org/linux/man-pages/man3/pthread_setname_np.3.html
-///
-/// Stack Overflow "Can I set the name of a thread in pthreads / linux?"
-/// which includes useful information on the minor API differences between
-/// Linux, BSD and OS X.
-/// http://stackoverflow.com/questions/2369738/can-i-set-the-name-of-a-thread-in-pthreads-linux/7989973#7989973
-///
-/// musl mailng list posting "pthread set name on MIPs" which includes the
-/// information that musl doesn't currently implement 'pthread_setname_np'
-/// https://marc.info/?l=musl&m=146171729013062&w=1
-///
+
 /// For better formatting it is recommended to limit thread name to max 4 characters.
 void setThreadName(std::string const& _n);
 
 /// Set the current thread's log name.
 std::string getThreadName();
 
-#define LOG BOOST_LOG
+#define LOG(logger) logger.CreateStream()
 
 enum Verbosity
 {
@@ -59,42 +37,71 @@ enum Verbosity
     VerbosityTrace = 4,
 };
 
+class SpdlogStreamInput {
+  public:
+    SpdlogStreamInput(std::optional<spdlog::level::level_enum> level)
+      : level_{level} {}
+
+    ~SpdlogStreamInput() {
+        if (level_) {
+          spdlog::log(*level_, "aleth: {}", fmt::to_string(mb_));
+        }
+    }
+
+    template<typename T>
+    SpdlogStreamInput& operator<<(const T& value) {
+        if (level_) {
+         fmt::format_to(mb_, "{}", value);
+        }
+      return *this;
+    }
+
+  private:
+    std::optional<spdlog::level::level_enum> level_;
+    fmt::memory_buffer mb_;
+};
+
+class SpdlogWrapper {
+  public:
+    SpdlogWrapper(Verbosity verbosity) {
+        switch (verbosity) {
+            case VerbosityError: level_ = spdlog::level::err; break;
+            case VerbosityWarning: level_ = spdlog::level::warn; break;
+            case VerbosityInfo: level_ = spdlog::level::info; break;
+            case VerbosityDebug: level_ = spdlog::level::debug; break;
+            case VerbosityTrace: level_ = spdlog::level::trace; break;
+            case VerbositySilent: break;
+            default: throw std::runtime_error("invalid verbosity");
+        }
+    }
+
+    SpdlogStreamInput CreateStream() {
+        return SpdlogStreamInput(level_);
+    }
+
+  private:
+    std::optional<spdlog::level::level_enum> level_;
+};
+
 // Simple cout-like stream objects for accessing common log channels.
 // Thread-safe
-BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_errorLogger,
-    boost::log::sources::severity_channel_logger_mt<>,
-    (boost::log::keywords::severity = VerbosityError)(boost::log::keywords::channel = "error"))
-#define cerror LOG(dev::g_errorLogger::get())
+inline SpdlogWrapper g_errorLogger{VerbosityError};
+inline SpdlogWrapper g_warningLogger{VerbosityWarning};
+inline SpdlogWrapper g_infoLogger{VerbosityInfo};
+inline SpdlogWrapper g_debugLogger{VerbosityDebug};
+inline SpdlogWrapper g_traceLogger{VerbosityTrace};
 
-BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_warnLogger,
-    boost::log::sources::severity_channel_logger_mt<>,
-    (boost::log::keywords::severity = VerbosityWarning)(boost::log::keywords::channel = "warn"))
-#define cwarn LOG(dev::g_warnLogger::get())
-
-BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_noteLogger,
-    boost::log::sources::severity_channel_logger_mt<>,
-    (boost::log::keywords::severity = VerbosityInfo)(boost::log::keywords::channel = "info"))
-#define cnote LOG(dev::g_noteLogger::get())
-
-BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_debugLogger,
-    boost::log::sources::severity_channel_logger_mt<>,
-    (boost::log::keywords::severity = VerbosityDebug)(boost::log::keywords::channel = "debug"))
-#define cdebug LOG(dev::g_debugLogger::get())
-
-BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_traceLogger,
-    boost::log::sources::severity_channel_logger_mt<>,
-    (boost::log::keywords::severity = VerbosityTrace)(boost::log::keywords::channel = "trace"))
-#define ctrace LOG(dev::g_traceLogger::get())
+#define cerror LOG(dev::g_errorLogger)
+#define cwarn LOG(dev::g_warningLogger)
+#define cnote LOG(dev::g_infoLogger)
+#define cdebug LOG(dev::g_debugLogger)
+#define ctrace LOG(dev::g_traceLogger)
 
 // Simple macro to log to any channel a message without creating a logger object
 // e.g. clog(VerbosityInfo, "channel") << "message";
 // Thread-safe
-BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(
-    g_clogLogger, boost::log::sources::severity_channel_logger_mt<>)
-#define clog(SEVERITY, CHANNEL)                            \
-    BOOST_LOG_STREAM_WITH_PARAMS(dev::g_clogLogger::get(), \
-        (boost::log::keywords::severity = SEVERITY)(boost::log::keywords::channel = CHANNEL))
-
+#define clog(SEVERITY, CHANNEL)  \
+    LOG(SpdlogWrapper(SEVERITY))
 
 struct LoggingOptions
 {
@@ -111,282 +118,49 @@ bool isVmTraceEnabled();
 
 // Simple non-thread-safe logger with fixed severity and channel for each message
 // For better formatting it is recommended to limit channel name to max 6 characters.
-using Logger = boost::log::sources::severity_channel_logger<>;
+using Logger = SpdlogWrapper;
 inline Logger createLogger(int _severity, std::string const& _channel)
 {
-    return Logger(
-        boost::log::keywords::severity = _severity, boost::log::keywords::channel = _channel);
+    return Logger(static_cast<Verbosity>(_severity));
 }
 
-// Below overloads for both const and non-const references are needed, because without overload for
-// non-const reference generic operator<<(formatting_ostream& _strm, T& _value) will be preferred by
-// overload resolution.
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, bigint const& _value)
-{
-    _strm.stream() << EthNavy << _value << EthReset;
-    return _strm;
-}
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, bigint& _value)
-{
-    auto const& constValue = _value;
-    _strm << constValue;
-    return _strm;
-}
-
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, u256 const& _value)
-{
-    _strm.stream() << EthNavy << _value << EthReset;
-    return _strm;
-}
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, u256& _value)
-{
-    auto const& constValue = _value;
-    _strm << constValue;
-    return _strm;
-}
-
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, u160 const& _value)
-{
-    _strm.stream() << EthNavy << _value << EthReset;
-    return _strm;
-}
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, u160& _value)
-{
-    auto const& constValue = _value;
-    _strm << constValue;
-    return _strm;
-}
-
-template <unsigned N>
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, FixedHash<N> const& _value)
-{
-    _strm.stream() << EthTeal "#" << _value.abridged() << EthReset;
-    return _strm;
-}
-template <unsigned N>
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, FixedHash<N>& _value)
-{
-    auto const& constValue = _value;
-    _strm << constValue;
-    return _strm;
-}
-
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, h160 const& _value)
-{
-    _strm.stream() << EthRed "@" << _value.abridged() << EthReset;
-    return _strm;
-}
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, h160& _value)
-{
-    auto const& constValue = _value;
-    _strm << constValue;
-    return _strm;
-}
-
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, h256 const& _value)
-{
-    _strm.stream() << EthCyan "#" << _value.abridged() << EthReset;
-    return _strm;
-}
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, h256& _value)
-{
-    auto const& constValue = _value;
-    _strm << constValue;
-    return _strm;
-}
-
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, h512 const& _value)
-{
-    _strm.stream() << EthTeal "##" << _value.abridged() << EthReset;
-    return _strm;
-}
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, h512& _value)
-{
-    auto const& constValue = _value;
-    _strm << constValue;
-    return _strm;
-}
-
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, bytesConstRef _value)
-{
-    _strm.stream() << EthYellow "%" << toHex(_value) << EthReset;
-    return _strm;
-}
 }  // namespace dev
 
-// Overloads for types of std namespace can't be defined in dev namespace, because they won't be
-// found due to Argument-Dependent Lookup Placing anything into std is not allowed, but we can put
-// them into boost::log
-namespace boost
-{
-namespace log
-{
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, dev::bytes const& _value)
-{
-    _strm.stream() << EthYellow "%" << dev::toHex(_value) << EthReset;
-    return _strm;
-}
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, dev::bytes& _value)
-{
-    auto const& constValue = _value;
-    _strm << constValue;
-    return _strm;
-}
+namespace fmt {
 
-template <typename T>
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, std::vector<T> const& _value)
-{
-    _strm.stream() << EthWhite "[" EthReset;
-    int n = 0;
-    for (T const& i : _value)
-    {
-        _strm.stream() << (n++ ? EthWhite ", " EthReset : "");
-        _strm << i;
+template<>
+template <typename T, typename U>
+struct formatter<std::pair<T, U>> : fmt::formatter<std::string> {
+  template <typename FormatContext>
+  auto format(const std::pair<T, U>& p, FormatContext& ctx) {
+    return format_to(ctx.out(), "({}, {})", p.first, p.second);
+  }
+};
+
+template<>
+template <typename T, typename U>
+struct formatter<std::map<T, U>> : fmt::formatter<std::string> {
+  template <typename FormatContext>
+  auto format(const std::map<T, U>& m, FormatContext& ctx) {
+    auto out = ctx.out();
+
+    out = format_to(out, "[");
+
+    bool first = true;
+    for (const auto& [key, value] : m) {
+      if (first) {
+        out = format_to(out, "({}, {})", key, value);
+        first = false;
+      }
+      else {
+        out = format_to(out, ", ({}, {})", key, value);
+      }
     }
-    _strm.stream() << EthWhite "]" EthReset;
-    return _strm;
-}
-template <typename T>
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, std::vector<T>& _value)
-{
-    auto const& constValue = _value;
-    _strm << constValue;
-    return _strm;
-}
 
-template <typename T>
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, std::set<T> const& _value)
-{
-    _strm.stream() << EthYellow "{" EthReset;
-    int n = 0;
-    for (T const& i : _value)
-    {
-        _strm.stream() << (n++ ? EthYellow ", " EthReset : "");
-        _strm << i;
-    }
-    _strm.stream() << EthYellow "}" EthReset;
-    return _strm;
-}
-template <typename T>
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, std::set<T>& _value)
-{
-    auto const& constValue = _value;
-    _strm << constValue;
-    return _strm;
-}
+    out = format_to(out, "]");
 
-template <typename T>
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, std::unordered_set<T> const& _value)
-{
-    _strm.stream() << EthYellow "{" EthReset;
-    int n = 0;
-    for (T const& i : _value)
-    {
-        _strm.stream() << (n++ ? EthYellow ", " EthReset : "");
-        _strm << i;
-    }
-    _strm.stream() << EthYellow "}" EthReset;
-    return _strm;
-}
-template <typename T>
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, std::unordered_set<T>& _value)
-{
-    auto const& constValue = _value;
-    _strm << constValue;
-    return _strm;
-}
+    return out;
+  }
+};
 
-template <typename T, typename U>
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, std::map<T, U> const& _value)
-{
-    _strm.stream() << EthLime "{" EthReset;
-    int n = 0;
-    for (auto const& i : _value)
-    {
-        _strm << (n++ ? EthLime ", " EthReset : "");
-        _strm << i.first;
-        _strm << (n++ ? EthLime ": " EthReset : "");
-        _strm << i.second;
-    }
-    _strm.stream() << EthLime "}" EthReset;
-    return _strm;
-}
-template <typename T, typename U>
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, std::map<T, U>& _value)
-{
-    auto const& constValue = _value;
-    _strm << constValue;
-    return _strm;
-}
-
-template <typename T, typename U>
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, std::unordered_map<T, U> const& _value)
-{
-    _strm << EthLime "{" EthReset;
-    int n = 0;
-    for (auto const& i : _value)
-    {
-        _strm.stream() << (n++ ? EthLime ", " EthReset : "");
-        _strm << i.first;
-        _strm.stream() << (n++ ? EthLime ": " EthReset : "");
-        _strm << i.second;
-    }
-    _strm << EthLime "}" EthReset;
-    return _strm;
-}
-template <typename T, typename U>
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, std::unordered_map<T, U>& _value)
-{
-    auto const& constValue = _value;
-    _strm << constValue;
-    return _strm;
-}
-
-template <typename T, typename U>
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, std::pair<T, U> const& _value)
-{
-    _strm.stream() << EthPurple "(" EthReset;
-    _strm << _value.first;
-    _strm.stream() << EthPurple ", " EthReset;
-    _strm << _value.second;
-    _strm.stream() << EthPurple ")" EthReset;
-    return _strm;
-}
-template <typename T, typename U>
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, std::pair<T, U>& _value)
-{
-    auto const& constValue = _value;
-    _strm << constValue;
-    return _strm;
-}
-}
-}  // namespace boost
+}  // namespace fmt
