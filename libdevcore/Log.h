@@ -128,7 +128,6 @@ inline Logger createLogger(int _severity, std::string const& _channel)
 
 namespace fmt {
 
-template<>
 template <typename T, typename U>
 struct formatter<std::pair<T, U>> : fmt::formatter<std::string> {
   template <typename FormatContext>
@@ -137,7 +136,6 @@ struct formatter<std::pair<T, U>> : fmt::formatter<std::string> {
   }
 };
 
-template<>
 template <typename T, typename U>
 struct formatter<std::map<T, U>> : fmt::formatter<std::string> {
   template <typename FormatContext>
