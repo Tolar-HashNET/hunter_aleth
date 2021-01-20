@@ -319,10 +319,10 @@ OnOpFunc Executive::simpleTrace()
         if (vm)
             LOG(traceLogger) << dumpStackAndMemory(*vm);
         LOG(traceLogger) << dumpStorage(ext);
-        LOG(traceLogger) << " < " << std::dec << ext.depth << " : " << ext.myAddress << " : #"
-                         << steps << " : " << std::hex << std::setw(4) << std::setfill('0') << PC
-                         << " : " << instructionInfo(inst).name << " : " << std::dec << gas
-                         << " : -" << std::dec
+        LOG(traceLogger) << " < " << ext.depth << " : " << ext.myAddress << " : #"
+                         << steps << " : " << PC
+                         << " : " << instructionInfo(inst).name << " : " << gas
+                         << " : -"
                          << gasCost << " : " << newMemSize << "x32"
                          << " >";
     };

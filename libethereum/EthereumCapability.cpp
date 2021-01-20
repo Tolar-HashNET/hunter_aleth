@@ -79,7 +79,7 @@ public:
     void onPeerTransactions(NodeID const& _peerID, RLP const& _r) override
     {
         unsigned itemCount = _r.itemCount();
-        LOG(m_logger) << "Transactions (" << std::dec << itemCount << " entries)";
+        LOG(m_logger) << "Transactions (" << itemCount << " entries)";
         m_tq.enqueue(_r, _peerID);
     }
 
@@ -156,13 +156,13 @@ public:
     void onPeerNodeData(NodeID const& /* _peerID */, RLP const& _r) override
     {
         unsigned itemCount = _r.itemCount();
-        LOG(m_logger) << "Node Data (" << std::dec << itemCount << " entries)";
+        LOG(m_logger) << "Node Data (" << itemCount << " entries)";
     }
 
     void onPeerReceipts(NodeID const& /* _peerID */, RLP const& _r) override
     {
         unsigned itemCount = _r.itemCount();
-        LOG(m_logger) << "Receipts (" << std::dec << itemCount << " entries)";
+        LOG(m_logger) << "Receipts (" << itemCount << " entries)";
     }
 
 private:
@@ -703,7 +703,7 @@ bool EthereumCapability::interpretCapabilityPacket(
         case GetBlockBodiesPacket:
         {
             unsigned count = static_cast<unsigned>(_r.itemCount());
-            LOG(m_logger) << "GetBlockBodies (" << std::dec << count << " entries) from "
+            LOG(m_logger) << "GetBlockBodies (" << count << " entries) from "
                           << _peerID;
 
             if (!count)
@@ -743,7 +743,7 @@ bool EthereumCapability::interpretCapabilityPacket(
         {
             unsigned itemCount = _r.itemCount();
 
-            LOG(m_logger) << "BlockHashes (" << std::dec << itemCount << " entries) "
+            LOG(m_logger) << "BlockHashes (" << itemCount << " entries) "
                           << (itemCount ? "" : " : NoMoreHashes") << " from " << _peerID;
 
             if (itemCount > c_maxIncomingNewHashesCount)
@@ -769,7 +769,7 @@ bool EthereumCapability::interpretCapabilityPacket(
                 m_host->updateRating(_peerID, -10);
                 break;
             }
-            LOG(m_logger) << "GetNodeData (" << std::dec << count << " entries) from " << _peerID;
+            LOG(m_logger) << "GetNodeData (" << count << " entries) from " << _peerID;
 
             strings const data = m_hostData->nodeData(_r);
 
@@ -790,7 +790,7 @@ bool EthereumCapability::interpretCapabilityPacket(
                 m_host->updateRating(_peerID, -10);
                 break;
             }
-            LOG(m_logger) << "GetReceipts (" << std::dec << count << " entries) from " << _peerID;
+            LOG(m_logger) << "GetReceipts (" << count << " entries) from " << _peerID;
 
             std::pair<bytes, unsigned> const rlpAndItemCount = m_hostData->receipts(_r);
 

@@ -320,8 +320,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _hello,
         capslog << "(" << cap.first << "," << std::dec << cap.second << ")";
 
     cnetlog << "Starting peer session with " << clientVersion << " (protocol: V" << protocolVersion
-            << ") " << _id << " " << std::showbase << "capabilities: " << capslog.str() << " "
-            << std::dec
+            << ") " << _id << " " << "capabilities: " << capslog.str() << " "
             << "port: " << listenPort;
 
     // create session so disconnects are managed
