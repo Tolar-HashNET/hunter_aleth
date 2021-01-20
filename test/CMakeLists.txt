@@ -31,15 +31,11 @@ set(unittest_sources
     unittests/libp2p/ENRTest.cpp
     unittests/libp2p/rlpx.cpp
 
-    unittests/libweb3core/memorydb.cpp
-    unittests/libweb3core/overlaydb.cpp
-    unittests/libweb3core/statecachedb.cpp
-
     unittests/libweb3jsonrpc/AccountHolder.cpp
 )
 
 add_executable(aleth-unittests ${unittest_sources})
-target_include_directories(aleth-unittests PRIVATE ${UTILS_INCLUDE_DIR})
+target_include_directories(aleth-unittests PRIVATE ${ALETH_UTILS_DIR})
 target_link_libraries(aleth-unittests PRIVATE
     web3jsonrpc ethashseal devcrypto devcore
     GTest::gtest GTest::gtest_main
@@ -117,7 +113,7 @@ hunter_add_package(yaml-cpp)
 find_package(yaml-cpp CONFIG REQUIRED)
 
 add_executable(testeth ${sources})
-target_include_directories(testeth PRIVATE ${UTILS_INCLUDE_DIR})
+target_include_directories(testeth PRIVATE ${ALETH_UTILS_DIR})
 target_link_libraries(testeth PRIVATE ethereum ethashseal web3jsonrpc devcrypto devcore aleth-buildinfo cryptopp-static yaml-cpp::yaml-cpp binaryen::binaryen libjson-rpc-cpp::client)
 install(TARGETS testeth DESTINATION ${CMAKE_INSTALL_BINDIR})
 

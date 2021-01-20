@@ -5,15 +5,15 @@
 
 #include <libdevcore/Guards.h>  // <boost/thread> conflicts with <thread>
 #include "Common.h"
-#include <secp256k1.h>
-#include <secp256k1_ecdh.h>
-#include <secp256k1_recovery.h>
-#include <secp256k1_sha256.h>
+#include <secp256k1/secp256k1.h>
+#include <secp256k1/secp256k1_ecdh.h>
+#include <secp256k1/secp256k1_recovery.h>
+#include <secp256k1/secp256k1_sha256.h>
 #include <cryptopp/aes.h>
 #include <cryptopp/pwdbased.h>
 #include <cryptopp/sha.h>
 #include <cryptopp/modes.h>
-#include <libscrypt.h>
+#include <libscrypt/libscrypt.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/RLP.h>
 #include "AES.h"

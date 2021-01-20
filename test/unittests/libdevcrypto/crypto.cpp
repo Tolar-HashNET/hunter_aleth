@@ -6,7 +6,7 @@
  */
 
 #include <libdevcore/Guards.h>
-#include <secp256k1.h>
+#include <secp256k1/secp256k1.h>
 #include <cryptopp/keccak.h>
 #include <cryptopp/pwdbased.h>
 #include <cryptopp/sha.h>
