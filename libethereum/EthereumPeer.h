@@ -110,7 +110,7 @@ private:
     unsigned m_unknownNewBlocks = 0;  ///< Number of unknown NewBlocks received from this peer
     unsigned m_lastAskedHeaders = 0;  ///< Number of hashes asked
 
-    Logger m_logger{createLogger(VerbosityDebug, "peer")};
+    Logger m_logger{createLogger(VerbosityTrace, "peer")};
 };
 }  // namespace eth
 }  // namespace dev

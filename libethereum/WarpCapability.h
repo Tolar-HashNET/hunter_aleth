@@ -129,7 +129,7 @@ private:
 
     std::unordered_map<NodeID, WarpPeerStatus> m_peers;
 
-    Logger m_logger{createLogger(VerbosityDebug, "warpcap")};
+    Logger m_logger{createLogger(VerbosityTrace, "warpcap")};
     Logger m_loggerWarn{createLogger(VerbosityWarning, "warpcap")};
 };
 

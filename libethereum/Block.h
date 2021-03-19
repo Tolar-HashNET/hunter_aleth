@@ -290,7 +290,7 @@ private:
 
     SealEngineFace* m_sealEngine = nullptr;		///< The chain's seal engine.
 
-    Logger m_logger{createLogger(VerbosityDebug, "block")};
+    Logger m_logger{createLogger(VerbosityTrace, "block")};
     Logger m_loggerDetailed{createLogger(VerbosityTrace, "block")};
 };
 

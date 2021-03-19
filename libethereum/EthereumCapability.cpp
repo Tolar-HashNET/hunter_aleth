@@ -169,7 +169,7 @@ private:
     std::shared_ptr<BlockChainSync> m_sync;
     TransactionQueue& m_tq;
 
-    Logger m_logger{createLogger(VerbosityDebug, "host")};
+    Logger m_logger{createLogger(VerbosityTrace, "host")};
 };
 
 class EthereumHostData : public EthereumHostDataFace

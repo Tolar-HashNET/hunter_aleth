@@ -31,7 +31,7 @@ TimerHelper::~TimerHelper()
 {
     auto e = std::chrono::high_resolution_clock::now() - m_t;
     if (!m_ms || e > std::chrono::milliseconds(m_ms))
-        clog(VerbosityDebug, "timer")
+        clog(VerbositySilent, "timer")
             << m_id << " " << std::chrono::duration_cast<std::chrono::milliseconds>(e).count() << " ms";
 }
 

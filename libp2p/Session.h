@@ -179,11 +179,11 @@ private:
 
     std::string m_logSuffix;
 
-    Logger m_netLogger{createLogger(VerbosityDebug, "net")};
+    Logger m_netLogger{createLogger(VerbosityTrace, "net")};
     Logger m_netLoggerDetail{createLogger(VerbosityTrace, "net")};
     Logger m_netLoggerError{createLogger(VerbosityError, "net")};
 
-    Logger m_capLogger{createLogger(VerbosityDebug, "p2pcap")};
+    Logger m_capLogger{createLogger(VerbosityTrace, "p2pcap")};
     Logger m_capLoggerDetail{createLogger(VerbosityTrace, "p2pcap")};
 };
 

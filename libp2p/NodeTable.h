@@ -364,7 +364,7 @@ protected:
     // Expiration time of sent discovery packets.
     std::chrono::seconds m_requestTimeToLive;
 
-    mutable Logger m_logger{createLogger(VerbosityDebug, "discov")};
+    mutable Logger m_logger{createLogger(VerbosityTrace, "discov")};
 
     bool m_allowLocalDiscovery;                                     ///< Allow nodes with local addresses to be included in the discovery process
 
