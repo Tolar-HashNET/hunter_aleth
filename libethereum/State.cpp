@@ -51,17 +51,17 @@ OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, Wit
             fs::remove_all(dbPaths.statePath());
         }
 
-        clog(VerbosityDebug, "statedb")
+        clog(VerbosityTrace, "statedb")
             << "Verifying path exists (and creating if not present): " << dbPaths.chainPath();
         fs::create_directories(dbPaths.chainPath());
-        clog(VerbosityDebug, "statedb")
+        clog(VerbosityTrace, "statedb")
             << "Ensuring permissions are set for path: " << dbPaths.chainPath();
         DEV_IGNORE_EXCEPTIONS(fs::permissions(dbPaths.chainPath(), fs::owner_all));
     }
 
     try
     {
-        clog(VerbosityTrace, "statedb") << "Opening state database";
+        clog(VerbosityInfo, "statedb") << "Opening state database";
         std::unique_ptr<db::DatabaseFace> db = db::DBFactory::create(dbPaths.statePath());
         return OverlayDB(std::move(db));
     }

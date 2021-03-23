@@ -311,7 +311,7 @@ private:
 
     std::unique_ptr<boost::fibers::fiber> m_downloadFiber;
 
-    Logger m_logger{createLogger(VerbosityInfo, "snap")};
+    Logger m_logger{createLogger(VerbosityTrace, "snap")};
 };
 
 }  // namespace

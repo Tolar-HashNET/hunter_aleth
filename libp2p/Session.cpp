@@ -180,7 +180,7 @@ bool Session::interpretP2pPacket(P2pPacketType _t, RLP const& _r)
 
 void Session::ping()
 {
-    clog(VerbosityTrace, "p2pcap") << "Ping to " << m_logSuffix;
+    clog(VerbositySilent, "p2pcap") << "Ping to " << m_logSuffix;
     RLPStream s;
     sealAndSend(prep(s, PingPacket));
     m_ping = std::chrono::steady_clock::now();
@@ -301,7 +301,7 @@ void Session::drop(DisconnectReason _reason)
 
 void Session::disconnect(DisconnectReason _reason)
 {
-    clog(VerbosityTrace, "p2pcap") << "Disconnecting (our reason: " << reasonOf(_reason) << ") from " << m_logSuffix;
+    clog(VerbositySilent, "p2pcap") << "Disconnecting (our reason: " << reasonOf(_reason) << ") from " << m_logSuffix;
 
     if (m_socket->ref().is_open())
     {

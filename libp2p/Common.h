@@ -66,8 +66,8 @@ struct NetworkRestartNotSupported : virtual dev::Exception {};
 /// The ECDHE agreement failed during RLPx handshake.
 struct ECDHEError: virtual Exception {};
 
-inline SpdlogWrapper g_netnoteLogger{VerbosityInfo};
-inline SpdlogWrapper g_netlogLogger{VerbosityDebug};
+inline SpdlogWrapper g_netnoteLogger{VerbosityTrace};
+inline SpdlogWrapper g_netlogLogger{VerbosityTrace};
 inline SpdlogWrapper g_netdetailsLogger{VerbosityTrace};
 
 #define cnetnote LOG(dev::p2p::g_netnoteLogger)

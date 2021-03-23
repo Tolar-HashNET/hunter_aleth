@@ -259,12 +259,12 @@ void NodeTable::doDiscoveryRound(
             if (_ec.value() == boost::asio::error::operation_aborted ||
                 discoveryTimer->expiry() == c_steadyClockMin)
             {
-                clog(VerbosityDebug, "discov") << "Discovery timer was probably cancelled";
+                clog(VerbosityTrace, "discov") << "Discovery timer was probably cancelled";
                 return;
             }
             else if (_ec)
             {
-                clog(VerbosityDebug, "discov")
+                clog(VerbosityTrace, "discov")
                     << "Discovery timer error detected: " << _ec.value() << " " << _ec.message();
                 return;
             }
@@ -564,7 +564,7 @@ std::shared_ptr<NodeEntry> NodeTable::handlePong(
                     IdentitySchemeV4::updateENR(m_hostENR, m_secret, m_hostNodeEndpoint.address(),
                         m_hostNodeEndpoint.tcpPort(), m_hostNodeEndpoint.udpPort());
             }
-            clog(VerbosityInfo, "net") << "ENR updated: " << m_hostENR;
+            clog(VerbosityTrace, "net") << "ENR updated: " << m_hostENR;
         }        
     }
 
@@ -758,12 +758,12 @@ void NodeTable::doDiscovery()
         if (_ec.value() == boost::asio::error::operation_aborted ||
             discoveryTimer->expiry() == c_steadyClockMin)
         {
-            clog(VerbosityDebug, "discov") << "Discovery timer was cancelled";
+            clog(VerbosityTrace, "discov") << "Discovery timer was cancelled";
             return;
         }
         else if (_ec)
         {
-            clog(VerbosityDebug, "discov")
+            clog(VerbosityTrace, "discov")
                 << "Discovery timer error detected: " << _ec.value() << " " << _ec.message();
             return;
         }
@@ -822,12 +822,12 @@ void NodeTable::runBackgroundTask(std::chrono::milliseconds const& _period,
         if (_ec.value() == boost::asio::error::operation_aborted ||
             _timer->expiry() == c_steadyClockMin)
         {
-            clog(VerbosityDebug, "discov") << "Timer was cancelled";
+            clog(VerbosityTrace, "discov") << "Timer was cancelled";
             return;
         }
         else if (_ec)
         {
-            clog(VerbosityDebug, "discov")
+            clog(VerbosityTrace, "discov")
                 << "Timer error detected: " << _ec.value() << " " << _ec.message();
             return;
         }

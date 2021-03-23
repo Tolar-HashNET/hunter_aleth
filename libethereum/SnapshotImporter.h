@@ -36,7 +36,7 @@ private:
     StateImporterFace& m_stateImporter;
     BlockChainImporterFace& m_blockChainImporter;
 
-    Logger m_logger{createLogger(VerbosityInfo, "snap")};
+    Logger m_logger{createLogger(VerbosityTrace, "snap")};
 };
 
 }

@@ -417,9 +417,9 @@ private:
     /// logging to once every c_logActivePeersInterval seconds
     std::chrono::steady_clock::time_point m_lastPeerLogMessage;
 
-    mutable Logger m_logger{createLogger(VerbosityDebug, "net")};
+    mutable Logger m_logger{createLogger(VerbosityTrace, "net")};
     Logger m_detailsLogger{createLogger(VerbosityTrace, "net")};
-    Logger m_infoLogger{createLogger(VerbosityInfo, "net")};
+    Logger m_infoLogger{createLogger(VerbosityTrace, "net")};
 };
 
 }

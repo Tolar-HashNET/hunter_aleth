@@ -308,7 +308,7 @@ private:
     u256 m_difficulty;                                                  ///< Total difficulty of blocks in the queue
     u256 m_drainingDifficulty;                                          ///< Total difficulty of blocks in draining
 
-    Logger m_logger{createLogger(VerbosityDebug, "bq")};
+    Logger m_logger{createLogger(VerbosityTrace, "bq")};
     Logger m_loggerDetail{createLogger(VerbosityTrace, "bq")};
 };
 

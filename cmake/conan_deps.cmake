@@ -2,9 +2,7 @@ include(cmake/conan.cmake)
 
 set(CONAN_CMAKE_SILENT_OUTPUT True)
 
-conan_add_remote(NAME bintray URL https://api.bintray.com/conan/inexorgame/inexor-conan)
-conan_add_remote(NAME tolar-conan URL http://116.203.176.114:9300)
-execute_process (COMMAND "conan user tolar -r tolar-conan remote_name -p tolar")
+conan_add_remote(NAME tolar-conan URL https://artifactory.dev.tolar.io/artifactory/api/conan/conan INDEX 0)
 
 conan_cmake_run(
         REQUIRES

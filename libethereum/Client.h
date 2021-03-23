@@ -365,8 +365,8 @@ protected:
     /// Called when blockchain was changed
     Signal<h256s const&, h256s const&> m_onChainChanged;
 
-    Logger m_logger{createLogger(VerbosityInfo, "client")};
-    Logger m_loggerDetail{createLogger(VerbosityDebug, "client")};
+    Logger m_logger{createLogger(VerbosityTrace, "client")};
+    Logger m_loggerDetail{createLogger(VerbosityTrace, "client")};
 };
 
 }

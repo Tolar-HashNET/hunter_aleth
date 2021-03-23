@@ -152,8 +152,8 @@ private:
     h256 m_lastImportedBlockHash;				///< Last imported block hash
     u256 m_syncingTotalDifficulty;				///< Highest peer difficulty
 
-    Logger m_logger{createLogger(VerbosityDebug, "sync")};
-    Logger m_loggerInfo{createLogger(VerbosityInfo, "sync")};
+    Logger m_logger{createLogger(VerbosityTrace, "sync")};
+    Logger m_loggerInfo{createLogger(VerbosityTrace, "sync")};
     Logger m_loggerDetail{createLogger(VerbosityTrace, "sync")};
     Logger m_loggerWarning{createLogger(VerbosityWarning, "sync")};
 
