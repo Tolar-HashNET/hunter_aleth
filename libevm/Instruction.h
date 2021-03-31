@@ -3,6 +3,8 @@
 // Licensed under the GNU General Public License, Version 3.
 #pragma once
 
+#undef MSIZE
+
 #include <cstdint>
 
 namespace dev
