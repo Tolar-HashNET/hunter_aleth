@@ -146,6 +146,18 @@ evmc::bytes32 EvmCHost::get_block_hash(int64_t _number) const noexcept
     return toEvmC(m_extVM.blockHash(_number));
 }
 
+evmc_access_status EvmCHost::access_account(const evmc::address& addr) noexcept
+{
+ // our version of VM will not support ETH London fork so we will not implement support for EIP-2929
+ return evmc_access_status::EVMC_ACCESS_WARM;
+}
+
+evmc_access_status EvmCHost::access_storage(const evmc::address& addr, const evmc::bytes32& key) noexcept
+{
+ // our version of VM will not support ETH London fork so we will not implement support for EIP-2929
+return evmc_access_status::EVMC_ACCESS_WARM;
+}
+
 evmc::result EvmCHost::create(evmc_message const& _msg) noexcept
 {
     u256 gas = _msg.gas;

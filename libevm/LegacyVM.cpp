@@ -1461,6 +1461,15 @@ void LegacyVM::interpretCases()
         }
         NEXT
 
+        CASE(BASEFEE)
+        {
+            ON_OP();
+            
+            // we don't have support for BASEFEE instruction for now
+            throwBadInstruction();
+        }
+        NEXT
+
         CASE(POP)
         {
             ON_OP();
