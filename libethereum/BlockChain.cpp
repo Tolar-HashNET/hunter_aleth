@@ -1630,8 +1630,8 @@ void BlockChain::setChainStartBlockNumber(unsigned _number)
     catch (boost::exception const& ex)
     {
         BOOST_THROW_EXCEPTION(FailedToWriteChainStart()
-                              << errinfo_hash256(hash)
-                              << boost::errinfo_nested_exception(boost::copy_exception(ex)));
+                              << errinfo_hash256(hash));
+                              //<< boost::errinfo_nested_exception(boost::copy_exception(ex)));
     }
 }
 
