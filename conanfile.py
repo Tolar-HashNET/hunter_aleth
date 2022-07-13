@@ -14,7 +14,7 @@ class TolarAlethConan(ConanFile):
     generators = ["cmake"]
     requires = [
         "spdlog/1.9.2",
-        "boost/1.75.0",
+        "boost/1.79.0",
         "snappy/1.1.9",
         "cryptopp/8.2.0",
         "leveldb/1.22",

@@ -6,12 +6,12 @@ conan_add_remote(NAME tolar-conan URL https://artifactory.dev.tolar.io/artifacto
 
 conan_cmake_run(
         REQUIRES
-        spdlog/1.8.1
-        boost/1.74.0
-        snappy/1.1.8
+        spdlog/1.9.2
+        boost/1.79.0
+        snappy/1.1.9
         cryptopp/8.2.0
         leveldb/1.22
-        rocksdb/6.10.2
+        rocksdb/6.20.3
         secp256k1/0.1@tolar/stable
         libff/0.1@tolar/stable
         libscrypt/0.1@tolar/stable
