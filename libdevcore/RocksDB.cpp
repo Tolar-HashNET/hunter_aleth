@@ -97,6 +97,7 @@ rocksdb::Options RocksDB::defaultDBOptions()
     rocksdb::Options options;
     options.create_if_missing = true;
     options.max_open_files = 256;
+    options.keep_log_file_num = 1;
     return options;
 }
 
