@@ -97,6 +97,7 @@ rocksdb::Options RocksDB::defaultDBOptions()
     rocksdb::Options options;
     options.create_if_missing = true;
     options.max_open_files = 256;
+    options.keep_log_file_num = 1;
     return options;
 }
 
@@ -128,7 +129,7 @@ bool RocksDB::exists(Slice _key) const
 {
     std::string value;
     rocksdb::Slice const key(_key.data(), _key.size());
-    if (!m_db->KeyMayExist(m_readOptions, key, &value, static_cast<bool*>(nullptr)))
+    if (!m_db->KeyMayExist(m_readOptions, key, &value, nullptr))
         return false;
 
     auto const status = m_db->Get(m_readOptions, key, &value);
