@@ -312,6 +312,10 @@ public:
     void emit_log(const evmc::address& _addr, const uint8_t* _data, size_t _dataSize,
         const evmc::bytes32 _topics[], size_t _numTopics) noexcept override;
 
+    evmc_access_status access_account(const evmc::address& addr) noexcept override;
+
+    evmc_access_status access_storage(const evmc::address& addr, const evmc::bytes32& key) noexcept override;
+
 private:
     evmc::result create(evmc_message const& _msg) noexcept;
 
