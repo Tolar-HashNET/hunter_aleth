@@ -7,6 +7,22 @@
 using namespace dev;
 using namespace dev::eth;
 
+void LegacyVM::CallOnOpWithBackupState() {
+    if (m_onOp) {
+        BackupState current_state;
+        BackupAll(current_state);
+
+        // difference is total cost of the instruction
+        m_runGas = m_backup.io_gas - m_io_gas;
+
+        RestoreAll(m_backup);
+
+        ON_OP();
+
+        RestoreAll(current_state);
+    }
+}
+
 uint64_t LegacyVM::memNeed(u256 const& _offset, u256 const& _size)
 {
     return toInt63(_size ? u512(_offset) + _size : u512(0));
@@ -188,6 +204,10 @@ void LegacyVM::logGasMem()
 
 void LegacyVM::fetchInstruction()
 {
+    if (m_onOp) {
+        m_backup.io_gas = m_io_gas;
+    }
+
     m_OP = Instruction(m_code[m_PC]);
     const InstructionMetric& metric = c_metrics[static_cast<size_t>(m_OP)];
     adjustStack(metric.args, metric.ret);
@@ -220,7 +240,6 @@ owning_bytes_ref LegacyVM::exec(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& 
         do
             (this->*m_bounce)();
         while (m_bounce);
-
     }
     catch (...)
     {
@@ -284,10 +303,13 @@ void LegacyVM::interpretCases()
 
         CASE(RETURN)
         {
-            ON_OP();
+            BackupAll(m_backup);
+
             m_copyMemSize = 0;
             updateMem(memNeed(m_SP[0], m_SP[1]));
             updateIOGas();
+
+            CallOnOpWithBackupState();
 
             uint64_t b = (uint64_t)m_SP[0];
             uint64_t s = (uint64_t)m_SP[1];
@@ -302,10 +324,13 @@ void LegacyVM::interpretCases()
             if (!m_schedule->haveRevert)
                 throwBadInstruction();
 
-            ON_OP();
+            BackupAll(m_backup);
+
             m_copyMemSize = 0;
             updateMem(memNeed(m_SP[0], m_SP[1]));
             updateIOGas();
+
+            CallOnOpWithBackupState();
 
             uint64_t b = (uint64_t)m_SP[0];
             uint64_t s = (uint64_t)m_SP[1];
@@ -316,7 +341,8 @@ void LegacyVM::interpretCases()
 
         CASE(SELFDESTRUCT)
         {
-            ON_OP();
+            BackupAll(m_backup);
+
             if (m_ext->staticCall)
                 throwDisallowedStateChange();
 
@@ -337,6 +363,8 @@ void LegacyVM::interpretCases()
                     updateIOGas();
                 }
             }
+
+            CallOnOpWithBackupState();
 
             m_ext->selfdestruct(dest);
             m_bounce = 0;
@@ -1335,12 +1363,15 @@ void LegacyVM::interpretCases()
 
         CASE(EXTCODEHASH)
         {
-            ON_OP();
+            BackupAll(m_backup);
+
             if (!m_schedule->haveExtcodehash)
                 throwBadInstruction();
 
             m_runGas = toInt63(m_schedule->extcodehashGas);
             updateIOGas();
+
+            CallOnOpWithBackupState();
 
             m_SPP[0] = u256{m_ext->codeHashAt(asAddress(m_SP[0]))};
         }
@@ -1359,11 +1390,14 @@ void LegacyVM::interpretCases()
 
         CASE(EXTCODECOPY)
         {
-            ON_OP();
+            BackupAll(m_backup);
+
             m_runGas = toInt63(m_schedule->extcodecopyGas);
             m_copyMemSize = toInt63(m_SP[3]);
             updateMem(memNeed(m_SP[1], m_SP[3]));
             updateIOGas();
+
+            CallOnOpWithBackupState();
 
             Address a = asAddress(m_SP[0]);
             copyDataToMemory(&m_ext->codeAt(a), m_SP + 1);
@@ -1663,12 +1697,15 @@ void LegacyVM::interpretCases()
 
         CASE(SSTORE)
         {
-            ON_OP();
+            BackupAll(m_backup);
+
             if (m_ext->staticCall)
                 throwDisallowedStateChange();
 
             updateSSGas();
             updateIOGas();
+
+            CallOnOpWithBackupState();
 
             m_ext->setStore(m_SP[0], m_SP[1]);
         }
