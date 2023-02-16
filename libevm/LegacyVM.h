@@ -64,6 +64,93 @@ private:
     u256 m_stack[1024];
     u256 *m_stackEnd = &m_stack[1024];
     size_t stackSize() { return m_stackEnd - m_SP; }
+
+    struct BackupState {
+        u256 stack[1024];
+        bytes mem;
+        uint64_t io_gas;
+
+        uint64_t newMemSize;
+        uint64_t copyMemSize;
+
+        uint64_t PC;
+        u256* SP;
+        u256* SPP;
+        u256* stackEnd;
+
+        bool has_stack{false};
+        bool has_mem{false};
+    };
+
+    BackupState m_backup;
+
+    void ClearBackup(BackupState& state) {
+        state.has_stack = false;
+        state.has_mem = false;
+    }
+
+    void BackupStack(BackupState& state) {
+        if (m_onOp) {
+            std::copy(std::begin(m_stack), std::end(m_stack), std::begin(state.stack));
+            state.SP = m_SP;
+            state.SPP = m_SPP;
+            state.stackEnd = m_stackEnd;
+            state.has_stack = true;
+        }
+    }
+
+    void BackupMem(BackupState& state) {
+        if (m_onOp) {
+            state.mem = m_mem;
+            state.newMemSize = m_newMemSize;
+            state.copyMemSize = m_copyMemSize;
+            state.has_mem = true;
+        }
+    }
+
+    void BackupAll(BackupState& state) {
+        BackupStack(state);
+        BackupMem(state);
+
+        state.io_gas = m_io_gas;
+        state.PC = m_PC;
+    }
+
+    void RestoreStack(BackupState& state) {
+        if (m_onOp) {
+            if (!state.has_stack) {
+                throw std::runtime_error("restoring stack when it's not present");
+            }
+
+            std::copy(std::begin(state.stack), std::end(state.stack), std::begin(m_stack));
+
+            m_SP = state.SP;
+            m_SPP = state.SPP;
+            m_stackEnd = state.stackEnd;
+        }
+    }
+
+    void RestoreMem(BackupState& state) {
+        if (m_onOp) {
+            if (!state.has_mem) {
+                throw std::runtime_error("restoring mem when it's not present");
+            }
+
+            m_mem = state.mem;
+            m_newMemSize = state.newMemSize;
+            m_copyMemSize = state.copyMemSize;
+        }
+    }
+
+    void RestoreAll(BackupState& state) {
+        RestoreStack(state);
+        RestoreMem(state);
+
+        m_io_gas = state.io_gas;
+        m_PC = state.PC;
+    }
+
+    void CallOnOpWithBackupState();
     
 #if EIP_615
     // space for return stack
