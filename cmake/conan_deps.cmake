@@ -2,12 +2,12 @@ include(cmake/conan.cmake)
 
 set(CONAN_CMAKE_SILENT_OUTPUT True)
 
-conan_add_remote(NAME tolar-conan URL https://artifactory.dev.tolar.io/artifactory/api/conan/conan INDEX 0)
+conan_add_remote(NAME tolar-conan URL https://artifactory.dev.tolar.io/artifactory/api/conan/tolar-conan INDEX 0)
 
 conan_cmake_run(
         REQUIRES
         spdlog/1.9.2
-        boost/1.79.0
+        boost/1.81.0
         snappy/1.1.9
         cryptopp/8.2.0
         leveldb/1.22
