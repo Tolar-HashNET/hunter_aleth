@@ -18,7 +18,7 @@ class TolarAlethConan(ConanFile):
         "snappy/1.1.9",
         "cryptopp/8.2.0",
         "leveldb/1.22",
-        "rocksdb/6.20.3",
+        "rocksdb/6.29.5",
         "secp256k1/0.1@tolar/stable",
         "libff/0.1@tolar/stable",
         "libscrypt/0.1@tolar/stable",
